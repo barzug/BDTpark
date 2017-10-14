@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 )
 
-const schema = "../init.sql"
+const schema = "./init.sql"
 
 type DbFacade struct {
 	Pool *pgx.ConnPool
@@ -32,7 +32,7 @@ func (db *DbFacade) InitSchema() error {
 
 	schema := string(buf)
 
-	_, err = db.Pool.Query(schema)
+	_, err = db.Pool.Exec(schema)
 
 	if err != nil {
 		return err

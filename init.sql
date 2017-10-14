@@ -46,7 +46,6 @@ OIDS=FALSE
 );
 
 
-
 CREATE TABLE "posts" (
   "pID" serial NOT NULL,
   "author" bigint NOT NULL,
@@ -86,7 +85,6 @@ CREATE TABLE "votes" (
 ) WITH (
 OIDS=FALSE
 );
-
 
 
 

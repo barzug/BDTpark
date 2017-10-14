@@ -1,117 +1,61 @@
 package main
 
 import (
-	"./database"
-	"./database/services"
+	"./daemon"
+
+	"log"
+	h "./handlers"
+
 	"./router"
 
-	"os"
-	"log"
-	"encoding/json"
-
-	"github.com/jackc/pgx"
 	"github.com/valyala/fasthttp"
-	"github.com/qiangxue/fasthttp-routing"
-	"github.com/fasthttp-contrib/render"
 )
 
-var (
-	r  = render.New()
-	db database.DbFacade
-)
-
-
-/////////////////////////////////////////
-// forumHandler
-
-func createForum(c *routing.Context) error {
-	err := services.CreateForum(db.Pool, c.PostBody())
-	if err != nil {
-		r.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
-		return nil
-	}
-	r.JSON(c.RequestCtx, fasthttp.StatusCreated, make(map[string]interface{}))
-	return nil
-}
-
-//func createThreadBySlug(c *routing.Context) error {
-//	slug := c.Param("slug")
-//	err := services.CreateForum(db.Pool, c.PostBody())
-//	if err != nil {
-//		r.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
-//		return nil
-//	}
-//	r.JSON(c.RequestCtx, fasthttp.StatusCreated, make(map[string]interface{}))
-//	return nil
-//}
-
-func getForumDetails(c *routing.Context) error {
-	slug := c.Param("slug")
-	var byteData, err = services.GetForumBySlug(db.Pool, slug)
-	if err != nil {
-		r.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
-		return nil
-	}
-
-	var data map[string]interface{}
-	json.Unmarshal(byteData, &data)
-	r.JSON(c.RequestCtx, fasthttp.StatusOK, data)
-	return nil
-}
-
-
-//////////////////////
-// userHandler
-
+const port = ":8000"
 
 
 func addRoutes(r *router.Routing) {
-	r.AddRoute(&router.Route{Method: "POST", Path: "forum/create", Function: createForum})
-	//r.AddRoute(&router.Route{Method: "POST", Path: "forum/:slug/create", Function: foo})
-	r.AddRoute(&router.Route{Method: "GET", Path: "forum/:slug/details", Function: getForumDetails})
-	//r.AddRoute(&router.Route{Method: "GET", Path: "forum/:slug/threads", Function: foo})
-	//r.AddRoute(&router.Route{Method: "GET", Path: "forum/:slug/users", Function: foo})
+	//r.AddRoute(&router.Route{Method: "POST", Path: "/api/forum/create", Function: h.CreateForum})
+	//r.AddRoute(&router.Route{Method: "POST", Path: "api/forum/:slug/create", Function: foo})
+	//r.AddRoute(&router.Route{Method: "GET", Path: "/api/forum/<slug>/details", Function: getForumDetails})
+	//r.AddRoute(&router.Route{Method: "GET", Path: "api/forum/:slug/threads", Function: foo})
+	//r.AddRoute(&router.Route{Method: "GET", Path: "api/forum/:slug/users", Function: foo})
 	//
-	//r.AddRoute(&router.Route{Method: "GET", Path: "/post/:id/details", Function: foo})
-	//r.AddRoute(&router.Route{Method: "POST", Path: "/post/:id/details", Function: foo})
+	//r.AddRoute(&router.Route{Method: "GET", Path: "api/post/:id/details", Function: foo})
+	//r.AddRoute(&router.Route{Method: "POST", Path: "api/post/:id/details", Function: foo})
 	//
-	//r.AddRoute(&router.Route{Method: "POST", Path: "/service/clear", Function: foo})
-	//r.AddRoute(&router.Route{Method: "GET", Path: "/service/status", Function: foo})
+	//r.AddRoute(&router.Route{Method: "POST", Path: "api/service/clear", Function: foo})
+	//r.AddRoute(&router.Route{Method: "GET", Path: "api/service/status", Function: foo})
 	//
-	//r.AddRoute(&router.Route{Method: "POST", Path: "/thread/:slug_or_id/create", Function: foo})
-	//r.AddRoute(&router.Route{Method: "GET", Path: "/thread/:slug_or_id/details", Function: foo})
-	//r.AddRoute(&router.Route{Method: "POST", Path: "/thread/:slug_or_id/details", Function: foo})
-	//r.AddRoute(&router.Route{Method: "GET", Path: "/thread/:slug_or_id/posts", Function: foo})
-	//r.AddRoute(&router.Route{Method: "POST", Path: "/thread/:slug_or_id/vote", Function: foo})
+	//r.AddRoute(&router.Route{Method: "POST", Path: "api/thread/:slug_or_id/create", Function: foo})
+	//r.AddRoute(&router.Route{Method: "GET", Path: "api/thread/:slug_or_id/details", Function: foo})
+	//r.AddRoute(&router.Route{Method: "POST", Path: "api/thread/:slug_or_id/details", Function: foo})
+	//r.AddRoute(&router.Route{Method: "GET", Path: "api/thread/:slug_or_id/posts", Function: foo})
+	//r.AddRoute(&router.Route{Method: "POST", Path: "api/thread/:slug_or_id/vote", Function: foo})
 	//
-	r.AddRoute(&router.Route{Method: "POST", Path: "user/:nickname/create", Function: foo})
-	//r.AddRoute(&router.Route{Method: "GET", Path: "user/:nickname/profile", Function: foo})
-	//r.AddRoute(&router.Route{Method: "POST", Path: "user/:nickname/profile", Function: foo})
+	r.AddRoute(&router.Route{Method: "POST", Path: "/api/user/<nickname>/create", Function: h.CreateUser})
+	//r.AddRoute(&router.Route{Method: "GET", Path: "api/user/:nickname/profile", Function: foo})
+	//r.AddRoute(&router.Route{Method: "POST", Path: "api/user/:nickname/profile", Function: foo})
 }
 
-func afterConnect(conn *pgx.Conn) error {
-	return nil
-}
 
 func main() {
-	err := db.InitDB(pgx.ConnConfig{
-		Host:     "localhost",
-		User:     "docker",
-		Password: "docker",
-		Database: "postgres",
-	}, 100, afterConnect) //?
-	if err != nil {
-		log.Fatal("Unable to create connection pool", "error", err)
-		os.Exit(1)
-	}
-	r := new(router.Routing)
-	addRoutes(r)
-	r.Init()
-	if err := r.Init(); err != nil {
-		log.Fatal("Unable to setup router", "error", err)
-		os.Exit(1)
-	}
-	db.InitSchema()
 
-	log.Fatal(fasthttp.ListenAndServe(":8000/api", r.Router.HandleRequest))
+	log.Printf("Server started")
+
+	err := daemon.Init("localhost", "postgres", "docker", "docker", 100)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	r := new(router.Routing)
+
+	addRoutes(r)
+
+	err = r.Init()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Fatal(fasthttp.ListenAndServe(port, r.Router.HandleRequest))
 }
