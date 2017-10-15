@@ -36,8 +36,8 @@ OIDS=FALSE
 
 CREATE TABLE "users" (
   "uID" serial NOT NULL,
-  "email" TEXT NOT NULL UNIQUE,
-  "nickname" TEXT NOT NULL UNIQUE,
+  "email" CITEXT NOT NULL UNIQUE,
+  "nickname" CITEXT NOT NULL UNIQUE,
   "fullname" TEXT,
   "about" TEXT,
   CONSTRAINT users_pk PRIMARY KEY ("uID")
@@ -85,7 +85,6 @@ CREATE TABLE "votes" (
 ) WITH (
 OIDS=FALSE
 );
-
 
 
 
