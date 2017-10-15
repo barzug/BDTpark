@@ -1,14 +1,14 @@
-ALTER TABLE "posts" DROP CONSTRAINT IF EXISTS "posts_fk0";
-
-ALTER TABLE "posts" DROP CONSTRAINT IF EXISTS "posts_fk1";
-
-ALTER TABLE "threads" DROP CONSTRAINT IF EXISTS "threads_fk0";
-
-ALTER TABLE "threads" DROP CONSTRAINT IF EXISTS "threads_fk1";
-
-ALTER TABLE "votes" DROP CONSTRAINT IF EXISTS "votes_fk0";
-
-ALTER TABLE "votes" DROP CONSTRAINT IF EXISTS "votes_fk1";
+-- ALTER TABLE "posts" DROP CONSTRAINT IF EXISTS "posts_fk0";
+--
+-- ALTER TABLE "posts" DROP CONSTRAINT IF EXISTS "posts_fk1";
+--
+-- ALTER TABLE "threads" DROP CONSTRAINT IF EXISTS "threads_fk0";
+--
+-- ALTER TABLE "threads" DROP CONSTRAINT IF EXISTS "threads_fk1";
+--
+-- ALTER TABLE "votes" DROP CONSTRAINT IF EXISTS "votes_fk0";
+--
+-- ALTER TABLE "votes" DROP CONSTRAINT IF EXISTS "votes_fk1";
 
 DROP TABLE IF EXISTS "forums";
 
@@ -62,11 +62,11 @@ OIDS=FALSE
 
 
 CREATE TABLE "threads" (
-  "tID" bigint NOT NULL,
-  "author" bigint NOT NULL,
-  "created" DATE NOT NULL,
-  "forum" bigint NOT NULL,
-  "description" TEXT NOT NULL,
+  "tID" serial NOT NULL,
+  "author" TEXT NOT NULL,
+  "created" TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  "forum" TEXT NOT NULL,
+  "message" TEXT NOT NULL,
   "slug" TEXT NOT NULL UNIQUE,
   "title" TEXT NOT NULL,
   "votes" int4 NOT NULL DEFAULT '0',
@@ -87,11 +87,11 @@ OIDS=FALSE
 
 
 
-ALTER TABLE "posts" ADD CONSTRAINT "posts_fk0" FOREIGN KEY ("author") REFERENCES "users"("uID");
-ALTER TABLE "posts" ADD CONSTRAINT "posts_fk1" FOREIGN KEY ("thread") REFERENCES "threads"("tID");
-
-ALTER TABLE "threads" ADD CONSTRAINT "threads_fk0" FOREIGN KEY ("author") REFERENCES "users"("uID");
-ALTER TABLE "threads" ADD CONSTRAINT "threads_fk1" FOREIGN KEY ("forum") REFERENCES "forums"("fID");
-
-ALTER TABLE "votes" ADD CONSTRAINT "votes_fk0" FOREIGN KEY ("user") REFERENCES "users"("uID");
-ALTER TABLE "votes" ADD CONSTRAINT "votes_fk1" FOREIGN KEY ("thread") REFERENCES "threads"("tID");
+-- ALTER TABLE "posts" ADD CONSTRAINT "posts_fk0" FOREIGN KEY ("author") REFERENCES "users"("uID");
+-- ALTER TABLE "posts" ADD CONSTRAINT "posts_fk1" FOREIGN KEY ("thread") REFERENCES "threads"("tID");
+--
+-- ALTER TABLE "threads" ADD CONSTRAINT "threads_fk0" FOREIGN KEY ("author") REFERENCES "users"("nickname");
+-- ALTER TABLE "threads" ADD CONSTRAINT "threads_fk1" FOREIGN KEY ("forum") REFERENCES "forums"("fID");
+--
+-- ALTER TABLE "votes" ADD CONSTRAINT "votes_fk0" FOREIGN KEY ("user") REFERENCES "users"("uID");
+-- ALTER TABLE "votes" ADD CONSTRAINT "votes_fk1" FOREIGN KEY ("thread") REFERENCES "threads"("tID");
