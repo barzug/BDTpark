@@ -15,9 +15,9 @@ const port = ":8000"
 
 
 func addRoutes(r *router.Routing) {
-	//r.AddRoute(&router.Route{Method: "POST", Path: "/api/forum/create", Function: h.CreateForum})
-	//r.AddRoute(&router.Route{Method: "POST", Path: "api/forum/:slug/create", Function: foo})
-	//r.AddRoute(&router.Route{Method: "GET", Path: "/api/forum/<slug>/details", Function: getForumDetails})
+	r.AddRoute(&router.Route{Method: "POST", Path: "/api/forum/create", Function: h.CreateForum})
+	r.AddRoute(&router.Route{Method: "POST", Path: "api/forum/<slug>/create", Function: CreateThread})
+	r.AddRoute(&router.Route{Method: "GET", Path: "/api/forum/<slug>/details", Function: h.GetForumDetails})
 	//r.AddRoute(&router.Route{Method: "GET", Path: "api/forum/:slug/threads", Function: foo})
 	//r.AddRoute(&router.Route{Method: "GET", Path: "api/forum/:slug/users", Function: foo})
 	//

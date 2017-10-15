@@ -84,7 +84,7 @@ func (user *Users) UpdateUser(pool *pgx.ConnPool) error {
 		user.Email, user.Fullname, user.About, user.Nickname).Scan(&id)
 	if err != nil {
 		if pgerr, ok := err.(pgx.PgError); ok {
-			if pgerr.ConstraintName == "users_nickname_key" || pgerr.ConstraintName == "users_email_key"  {
+			if pgerr.ConstraintName == "users_email_key"  {
 				return utils.UniqueError
 			} else {
 				return err

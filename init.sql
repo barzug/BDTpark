@@ -23,7 +23,7 @@ DROP TABLE IF EXISTS "votes";
 CREATE TABLE "forums" (
   "fID" serial NOT NULL,
   "posts" int8 NOT NULL DEFAULT '0',
-  "slug" TEXT NOT NULL,
+  "slug" CITEXT NOT NULL UNIQUE,
   "threads" int4 NOT NULL DEFAULT '0',
   "title" TEXT NOT NULL,
   "author" TEXT NOT NULL,
@@ -31,7 +31,6 @@ CREATE TABLE "forums" (
 ) WITH (
 OIDS=FALSE
 );
-
 
 
 CREATE TABLE "users" (

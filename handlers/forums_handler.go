@@ -1,45 +1,65 @@
 package handlers
-//
-//import (
-//	"github.com/valyala/fasthttp"
-//	"github.com/qiangxue/fasthttp-routing"
-//	"encoding/json"
-//
-//	"../database/services"
-//)
-//
-//
-//func createForum(c *routing.Context) error {
-//	err := services.CreateForum(db.Pool, c.PostBody())
-//	if err != nil {
-//		r.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
-//		return nil
-//	}
-//	r.JSON(c.RequestCtx, fasthttp.StatusCreated, make(map[string]interface{}))
-//	return nil
-//}
-//
-////func createThreadBySlug(c *routing.Context) error {
-////	slug := c.Param("slug")
-////	err := services.CreateForum(db.Pool, c.PostBody())
-////	if err != nil {
-////		r.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
-////		return nil
-////	}
-////	r.JSON(c.RequestCtx, fasthttp.StatusCreated, make(map[string]interface{}))
-////	return nil
-////}
-//
-//func getForumDetails(c *routing.Context) error {
-//	slug := c.Param("slug")
-//	var byteData, err = services.GetForumBySlug(db.Pool, slug)
-//	if err != nil {
-//		r.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
-//		return nil
-//	}
-//
-//	var data map[string]interface{}
-//	json.Unmarshal(byteData, &data)
-//	r.JSON(c.RequestCtx, fasthttp.StatusOK, data)
-//	return nil
-//}
+
+import (
+	"../database/models"
+	"../daemon"
+	"../utils"
+
+	"encoding/json"
+	"github.com/valyala/fasthttp"
+	"github.com/qiangxue/fasthttp-routing"
+	"log"
+)
+
+func CreateForum(c *routing.Context) error {
+	forum := new(models.Forums)
+	if err := json.Unmarshal(c.PostBody(), forum); err != nil {
+		log.Fatal(err)
+		return err
+	}
+
+	author := models.Users{Nickname: forum.Author}
+
+	forumAuthor, err := author.GetUserByLogin(daemon.DB.Pool)
+	if err != nil {
+		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
+		return nil
+	}
+
+	forum.Author = forumAuthor.Nickname
+
+	if err := forum.CreateForum(daemon.DB.Pool); err != nil {
+		if err == utils.UniqueError {
+			prevForum, err := forum.GetForumBySlug(daemon.DB.Pool)
+
+			if err != nil {
+				log.Fatal(err)
+				daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
+				return err
+			}
+
+			daemon.Render.JSON(c.RequestCtx, fasthttp.StatusConflict, prevForum)
+			return nil
+		}
+		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
+		return nil
+	}
+
+	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusCreated, forum)
+	return nil
+}
+
+func GetForumDetails(c *routing.Context) error {
+	slug := c.Param("slug")
+	forum := new(models.Forums)
+	forum.Slug = slug
+
+	resultForum, err := forum.GetForumBySlug(daemon.DB.Pool);
+	if err != nil {
+		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
+		return nil
+	}
+
+	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, resultForum)
+	return nil
+}
