@@ -30,11 +30,8 @@ func CreateThread(c *routing.Context) error {
 		return nil
 	}
 
-
 	thread.Author = threadAuthor.Nickname
 	thread.Forum = threadForum.Slug
-
-	log.Print(thread)
 
 	if err := thread.CreateThread(daemon.DB.Pool); err != nil {
 		if err == utils.UniqueError {
@@ -56,3 +53,30 @@ func CreateThread(c *routing.Context) error {
 	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusCreated, thread)
 	return nil
 }
+
+func GetThread(c *routing.Context) error {
+	slug := c.Param("slug")
+
+	limit := string(c.QueryArgs().Peek("limit"))
+	since := string(c.QueryArgs().Peek("since"))
+	desc := string(c.QueryArgs().Peek("desc"))
+
+
+
+	forum := new(models.Forums)
+	forum.Slug = slug
+	_, err := forum.GetForumBySlug(daemon.DB.Pool);
+	if err != nil {
+		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
+		return nil
+	}
+	threads, err := forum.GetAll(daemon.DB.Pool, limit, since, desc);
+	if err != nil {
+		log.Print(err)
+		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
+	}
+	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, threads)
+	return nil
+}
+
+

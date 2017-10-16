@@ -4,6 +4,7 @@ import (
 	"github.com/jackc/pgx"
 
 	"../../utils"
+	"strconv"
 )
 
 type Forums struct {
@@ -14,7 +15,6 @@ type Forums struct {
 	Title   string `json:"title"`
 	Author  string `json:"user"`
 }
-
 
 func (forum *Forums) CreateForum(pool *pgx.ConnPool) error {
 	var id int64
@@ -34,7 +34,6 @@ func (forum *Forums) CreateForum(pool *pgx.ConnPool) error {
 	return nil
 }
 
-
 func (forum *Forums) GetForumBySlug(pool *pgx.ConnPool) (Forums, error) {
 	resultForum := Forums{}
 	err := pool.QueryRow(`SELECT slug, title, author, posts, threads  FROM forums WHERE slug = $1`,
@@ -44,4 +43,47 @@ func (forum *Forums) GetForumBySlug(pool *pgx.ConnPool) (Forums, error) {
 		return resultForum, err
 	}
 	return resultForum, nil
+}
+
+func (forum *Forums) GetAll(pool *pgx.ConnPool, limit, since, desc string) ([]Threads, error) {
+	queryRow := `SELECT "tID", author, created, forum, message, slug, title, votes FROM threads WHERE forum = $1`
+
+	var params []interface{}
+	params = append(params, forum.Slug)
+	if since != "" {
+		if desc == "true" {
+			queryRow += ` AND created <= $` + strconv.Itoa(len(params) + 1)
+		} else {
+			queryRow += ` AND created >= $` + strconv.Itoa(len(params) + 1)
+		}
+		params = append(params, since)
+	}
+	if desc == "true" {
+		queryRow += ` ORDER BY created DESC`
+	} else {
+		queryRow += ` ORDER BY created ASC`
+	}
+	if limit != "" {
+		queryRow += ` LIMIT $` + strconv.Itoa(len(params) + 1)
+		params = append(params, limit)
+	}
+
+
+
+	rows, err := pool.Query(queryRow, params...)
+	if err != nil {
+		return nil, err
+	}
+
+
+	resultThreads := []Threads{}
+
+
+	currentThreadInRows := Threads{}
+	for rows.Next() {
+		rows.Scan(&currentThreadInRows.TID, &currentThreadInRows.Author, &currentThreadInRows.Created, &currentThreadInRows.Forum,
+			&currentThreadInRows.Message, &currentThreadInRows.Slug, &currentThreadInRows.Title, &currentThreadInRows.Votes)
+		resultThreads = append(resultThreads, currentThreadInRows)
+	}
+	return resultThreads, nil
 }

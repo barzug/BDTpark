@@ -47,8 +47,8 @@ OIDS=FALSE
 
 CREATE TABLE "posts" (
   "pID" serial NOT NULL,
-  "author" bigint NOT NULL,
-  "created" DATE NOT NULL,
+  "author" TEXT NOT NULL,
+  "created" TIMESTAMP WITH TIME ZONE DEFAULT now(),
   "forum" TEXT NOT NULL,
   "isEdited" BOOLEAN NOT NULL DEFAULT 'false',
   "message" TEXT,
@@ -65,7 +65,7 @@ CREATE TABLE "threads" (
   "tID" serial NOT NULL,
   "author" TEXT NOT NULL,
   "created" TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  "forum" TEXT NOT NULL,
+  "forum" CITEXT NOT NULL,
   "message" TEXT NOT NULL,
   "slug" TEXT NOT NULL UNIQUE,
   "title" TEXT NOT NULL,

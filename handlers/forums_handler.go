@@ -12,6 +12,7 @@ import (
 )
 
 func CreateForum(c *routing.Context) error {
+
 	forum := new(models.Forums)
 	if err := json.Unmarshal(c.PostBody(), forum); err != nil {
 		log.Fatal(err)

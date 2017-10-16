@@ -5,7 +5,6 @@ import (
 
 	"../../utils"
 
-	"log"
 )
 
 type Users struct {
@@ -39,7 +38,6 @@ func (user *Users) GetUserByLogin(pool *pgx.ConnPool) (Users, error) {
 	resultUser := Users{}
 	err := pool.QueryRow(`SELECT nickname, email, fullname, about FROM users WHERE nickname = $1`,
 		user.Nickname).Scan(&resultUser.Nickname, &resultUser.Email, &resultUser.Fullname, &resultUser.About)
-	log.Print(resultUser)
 
 	if err != nil {
 		return resultUser, err
@@ -51,7 +49,6 @@ func (user *Users) GetUserByEmail(pool *pgx.ConnPool) (Users, error) {
 	resultUser := Users{}
 	err := pool.QueryRow(`SELECT nickname, email, fullname, about FROM users WHERE email = $1`,
 		user.Email).Scan(&resultUser.Nickname, &resultUser.Email, &resultUser.Fullname, &resultUser.About)
-	log.Print(resultUser)
 
 	if err != nil {
 		return resultUser, err

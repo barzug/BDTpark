@@ -44,8 +44,23 @@ func (thread *Threads) CreateThread(pool *pgx.ConnPool) error {
 
 func (thread *Threads) GetThreadBySlug(pool *pgx.ConnPool) (Threads, error) {
 	resultThread := Threads{}
-	err := pool.QueryRow(`SELECT author, created, forum, message, slug, title, votes FROM threads WHERE slug = $1`,
-		thread.Slug).Scan(&resultThread.Author, &resultThread.Created, &resultThread.Forum,
+	resultThread.Slug = thread.Slug
+	err := pool.QueryRow(`SELECT "tID", author, created, forum, message, title, votes FROM threads WHERE slug = $1`,
+		thread.Slug).Scan(&resultThread.TID, &resultThread.Author, &resultThread.Created, &resultThread.Forum,
+		&resultThread.Message, &resultThread.Title, &resultThread.Votes)
+
+	if err != nil {
+		return resultThread, err
+	}
+	return resultThread, nil
+}
+
+
+func (thread *Threads) GetThreadById(pool *pgx.ConnPool) (Threads, error) {
+	resultThread := Threads{}
+	resultThread.TID = thread.TID
+	err := pool.QueryRow(`SELECT author, created, forum, message, slug, title, votes FROM threads WHERE "tID" = $1`,
+		thread.TID).Scan(&resultThread.Author, &resultThread.Created, &resultThread.Forum,
 		&resultThread.Message, &resultThread.Slug, &resultThread.Title, &resultThread.Votes)
 
 	if err != nil {
