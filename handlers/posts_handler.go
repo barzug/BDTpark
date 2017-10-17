@@ -8,7 +8,6 @@ import (
 	"encoding/json"
 	"github.com/valyala/fasthttp"
 	"github.com/qiangxue/fasthttp-routing"
-	"log"
 	"time"
 	"strconv"
 )
@@ -18,7 +17,6 @@ func CreatePosts(c *routing.Context) error {
 	posts := []models.Posts{}
 	err := json.Unmarshal(c.PostBody(), &posts);
 	if err != nil {
-		log.Print(err)
 		return err
 	}
 	created := time.Now()
@@ -52,7 +50,6 @@ func CreatePosts(c *routing.Context) error {
 		//	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusConflict, prevForum)
 		//	return nil
 		//}
-		log.Print(err)
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusConflict, nil)
 		return nil
 	}

@@ -127,10 +127,10 @@ func GetThreadPosts(c *routing.Context) error {
 	var posts []models.Posts
 	switch sort {
 	case "tree":
-
+		posts, err = resultTread.GetPostsWithTreeSort(daemon.DB.Pool, limit, since, desc);
 
 	case "parent_tree":
-
+		posts, err = resultTread.GetPostsWithParentTreeSort(daemon.DB.Pool, limit, since, desc);
 
 	case "flat":
 		fallthrough
@@ -144,5 +144,45 @@ func GetThreadPosts(c *routing.Context) error {
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
 	}
 	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, posts)
+	return nil
+}
+
+
+
+func UpdateThread(c *routing.Context) error {
+	slugOrId := c.Param("slug_or_id")
+
+	thread := new(models.Threads)
+	if err := json.Unmarshal(c.PostBody(), thread); err != nil {
+		log.Print(err)
+		return err
+	}
+
+	prevThread := models.Threads{}
+	var err error
+	if id, parseErr := strconv.ParseInt(slugOrId, 10, 64); parseErr == nil {
+		thread.TID = id
+		prevThread, err = thread.GetThreadById(daemon.DB.Pool);
+	} else {
+		thread.Slug = slugOrId
+		prevThread, err = thread.GetThreadBySlug(daemon.DB.Pool);
+	}
+	if err != nil {
+		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
+		return nil
+	}
+
+	if utils.CheckEmpty(thread) {
+		utils.AdditionObject(thread, &prevThread)
+
+	}
+
+	if err := thread.UpdateThread(daemon.DB.Pool); err != nil {
+		log.Fatal(err)
+		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
+		return nil
+	}
+
+	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, thread)
 	return nil
 }

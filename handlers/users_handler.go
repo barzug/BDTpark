@@ -8,14 +8,12 @@ import (
 	"encoding/json"
 	"github.com/valyala/fasthttp"
 	"github.com/qiangxue/fasthttp-routing"
-	"log"
 )
 
 func CreateUser(c *routing.Context) error {
 	nickname := c.Param("nickname")
 	user := new(models.Users)
 	if err := json.Unmarshal(c.PostBody(), user); err != nil {
-		log.Fatal(err)
 		return err
 	}
 	user.Nickname = nickname
@@ -25,7 +23,6 @@ func CreateUser(c *routing.Context) error {
 			users, err := user.GetUserByLoginAndEmail(daemon.DB.Pool)
 
 			if err != nil {
-				log.Fatal(err)
 				daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
 				return err
 			}
@@ -33,7 +30,6 @@ func CreateUser(c *routing.Context) error {
 			daemon.Render.JSON(c.RequestCtx, fasthttp.StatusConflict, users)
 			return nil
 		}
-		log.Fatal(err)
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
 		return nil
 	}
@@ -61,23 +57,10 @@ func UpdateUser(c *routing.Context) error {
 	nickname := c.Param("nickname")
 	user := new(models.Users)
 	if err := json.Unmarshal(c.PostBody(), user); err != nil {
-		log.Fatal(err)
 		return err
 	}
 
 	user.Nickname = nickname
-	//if utils.CheckEmpty(*user) {
-	//	//log.Fatal(1)
-	//	//user.Nickname = nickname
-	//	resultUser, err := user.GetUserByLogin(daemon.DB.Pool);
-	//	if err != nil {
-	//		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
-	//		return nil
-	//	}
-	//
-	//	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, resultUser)
-	//	return nil
-	//}
 
 	if utils.CheckEmpty(user) {
 		prevUser, err := user.GetUserByLogin(daemon.DB.Pool);

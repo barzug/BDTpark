@@ -3,8 +3,7 @@ package models
 import (
 	"time"
 	"github.com/jackc/pgx"
-
-	//"fmt"
+	"log"
 )
 
 type Posts struct {
@@ -27,23 +26,27 @@ func CreatePostsBySlice(pool *pgx.ConnPool, posts []Posts, threadId int64, creat
 
 
 	for i := 0; i < len(posts); i++ {
-		//fmt.Print(posts[i].Parent)
-		//var id int64
-		//if posts[i].Parent != 0 {
-		//	err := pool.QueryRow(`SELECT "pID" FROM posts WHERE id=$1 AND thread=$2`, posts[i].Parent, threadId).Scan(&id);
-		//	if err != nil {
-		//		return err
-		//	}
-		//}
+		path := []int64{}
+		pool.QueryRow(`SELECT nextval('"posts_pID_seq"')`).Scan(&posts[i].PID);
+		if posts[i].Parent != 0 {
+			var parentPath []int64
+			err := pool.QueryRow(`SELECT path FROM posts WHERE "pID"=$1 AND thread=$2`, posts[i].Parent, threadId).Scan(&parentPath);
+			if err != nil {
+				return err
+			}
+			path = append(path, parentPath...)
+		}
+		path = append(path, posts[i].PID)
 
 		posts[i].Forum = forum
 		posts[i].Thread = threadId
 		posts[i].Created = created
 
-		err = tx.QueryRow(`INSERT INTO posts (message, thread, parent, author, created, forum)
-										VALUES ($1, $2, $3, $4, $5, $6) RETURNING "pID"`,
-			&posts[i].Message, &posts[i].Thread, &posts[i].Parent, &posts[i].Author, &posts[i].Created, &posts[i].Forum).Scan(&posts[i].PID);
+		err = tx.QueryRow(`INSERT INTO posts ("pID", message, thread, parent, author, created, forum, path)
+										VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING "pID"`,
+			&posts[i].PID, &posts[i].Message, &posts[i].Thread, &posts[i].Parent, &posts[i].Author, &posts[i].Created, &posts[i].Forum, &path).Scan(&posts[i].PID);
 		if err != nil {
+			log.Print(err)
 			return err;
 		}
 	}

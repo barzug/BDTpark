@@ -54,6 +54,7 @@ CREATE TABLE "posts" (
   "message"  TEXT,
   "parent"   INT8                     DEFAULT '0',
   "thread"   BIGINT  NOT NULL,
+  "path"     INT8[],
   CONSTRAINT posts_pk PRIMARY KEY ("pID")
 ) WITH (
 OIDS = FALSE

@@ -26,7 +26,13 @@ func (thread *Threads) CreateThread(pool *pgx.ConnPool) error {
 		slug = thread.Forum
 	}
 
-	err := pool.QueryRow(`INSERT INTO threads (author, created, message, slug, title, forum)`+
+	tx, err := pool.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	err = tx.QueryRow(`INSERT INTO threads (author, created, message, slug, title, forum)`+
 		`VALUES ($1, $2, $3, $4, $5, $6) RETURNING "tID";`,
 		thread.Author, thread.Created, thread.Message, slug, thread.Title, thread.Forum).Scan(&id)
 	if err != nil {
@@ -39,6 +45,16 @@ func (thread *Threads) CreateThread(pool *pgx.ConnPool) error {
 		}
 		return err
 	}
+	_, err = tx.Exec("UPDATE forums SET threads=threads+1 WHERE slug=$1", thread.Forum)
+	if err != nil {
+		return err
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return err
+	}
+
 	thread.TID = id
 	return nil
 }
@@ -74,11 +90,7 @@ func (thread *Threads) GetPostsWithFlatSort(pool *pgx.ConnPool, limit, since, de
 	var params []interface{}
 	params = append(params, thread.TID)
 	if since != "" {
-		if desc == "true" {
-			queryRow += ` AND created <= $` + strconv.Itoa(len(params)+1)
-		} else {
-			queryRow += ` AND created >= $` + strconv.Itoa(len(params)+1)
-		}
+		queryRow += ` AND "pID" > $` + strconv.Itoa(len(params)+1)
 		params = append(params, since)
 	}
 	if desc == "true" {
@@ -105,4 +117,84 @@ func (thread *Threads) GetPostsWithFlatSort(pool *pgx.ConnPool, limit, since, de
 		resultPosts = append(resultPosts, currentPostInRows)
 	}
 	return resultPosts, nil
+}
+
+func (thread *Threads) GetPostsWithTreeSort(pool *pgx.ConnPool, limit, since, desc string) ([]Posts, error) {
+	queryRow := `SELECT "pID", author, created, forum, message, thread, parent FROM posts WHERE thread = $1`
+
+	var params []interface{}
+	params = append(params, thread.TID)
+	if since != "" {
+		queryRow += ` AND "pID" <= $` + strconv.Itoa(len(params)+1)
+		params = append(params, since)
+	}
+	if desc == "true" {
+		queryRow += ` ORDER BY path DESC`
+	} else {
+		queryRow += ` ORDER BY path ASC`
+	}
+	if limit != "" {
+		queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
+		params = append(params, limit)
+	}
+
+	rows, err := pool.Query(queryRow, params...)
+	if err != nil {
+		return nil, err
+	}
+
+	resultPosts := []Posts{}
+
+	currentPostInRows := Posts{}
+	for rows.Next() {
+		rows.Scan(&currentPostInRows.PID, &currentPostInRows.Author, &currentPostInRows.Created, &currentPostInRows.Forum,
+			&currentPostInRows.Message, &currentPostInRows.Thread, &currentPostInRows.Parent)
+		resultPosts = append(resultPosts, currentPostInRows)
+	}
+	return resultPosts, nil
+}
+
+func (thread *Threads) GetPostsWithParentTreeSort(pool *pgx.ConnPool, limit, since, desc string) ([]Posts, error) {
+	queryRow := `SELECT "pID", author, created, forum, message, thread, parent FROM posts WHERE thread = $1`
+
+	var params []interface{}
+	params = append(params, thread.TID)
+	if since != "" {
+		queryRow += ` AND "pID" >= $` + strconv.Itoa(len(params)+1)
+		params = append(params, since)
+	}
+	if desc == "true" {
+		queryRow += ` ORDER BY path DESC`
+	} else {
+		queryRow += ` ORDER BY path ASC`
+	}
+	if limit != "" {
+		queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
+		params = append(params, limit)
+	}
+
+	rows, err := pool.Query(queryRow, params...)
+	if err != nil {
+		return nil, err
+	}
+
+	resultPosts := []Posts{}
+
+	currentPostInRows := Posts{}
+	for rows.Next() {
+		rows.Scan(&currentPostInRows.PID, &currentPostInRows.Author, &currentPostInRows.Created, &currentPostInRows.Forum,
+			&currentPostInRows.Message, &currentPostInRows.Thread, &currentPostInRows.Parent)
+		resultPosts = append(resultPosts, currentPostInRows)
+	}
+	return resultPosts, nil
+}
+
+func (thread *Threads) UpdateThread(pool *pgx.ConnPool) error {
+	err := pool.QueryRow(`UPDATE threads SET author = $1, message = $2, title = $3, forum = $4 `+
+		`WHERE slug = $5 RETURNING "tID", slug, created;`,
+		thread.Author, thread.Message, thread.Title, thread.Forum, thread.Slug).Scan(&thread.TID, &thread.Slug, &thread.Created)
+	if err != nil {
+		return err
+	}
+	return nil
 }

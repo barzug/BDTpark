@@ -6,7 +6,6 @@ import (
 
 	"encoding/json"
 	"github.com/qiangxue/fasthttp-routing"
-	"log"
 	"github.com/valyala/fasthttp"
 	"strconv"
 )
@@ -32,13 +31,11 @@ func VoteForThread(c *routing.Context) error {
 	vote := new(models.Votes)
 	err = json.Unmarshal(c.PostBody(), vote);
 	if err != nil {
-		log.Print(err)
 		return err
 	}
 
 	user := new(models.Users)
 	user.Nickname = vote.User
-	log.Print(user.Nickname)
 	resultUser, err := user.GetUserByLogin(daemon.DB.Pool);
 	if err != nil {
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
@@ -47,14 +44,12 @@ func VoteForThread(c *routing.Context) error {
 
 	vote.Thread = resultTread.TID
 	vote.User = resultUser.Nickname
-	log.Print(vote)
 
 	resultTread.Votes, err = vote.VoteForThreadAndReturningVotes(daemon.DB.Pool);
 	if err != nil {
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
 		return nil
 	}
-	log.Print(resultTread.Votes)
 
 	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, resultTread)
 	return nil
