@@ -4,6 +4,7 @@ import (
 	"time"
 	"github.com/jackc/pgx"
 
+	//"fmt"
 )
 
 type Posts struct {
@@ -13,7 +14,7 @@ type Posts struct {
 	Forum    string    `json:"forum"`
 	IsEdited bool      `json:"isedited"`
 	Message  string    `json:"message"`
-	Parent   int64     `json:"parents"`
+	Parent   int64     `json:"parent"`
 	Thread   int64     `json:"thread"`
 }
 
@@ -26,13 +27,14 @@ func CreatePostsBySlice(pool *pgx.ConnPool, posts []Posts, threadId int64, creat
 
 
 	for i := 0; i < len(posts); i++ {
-		var id int64
-		if posts[i].Parent != 0 {
-			err := pool.QueryRow("SELECT parent FROM post WHERE id=$1 AND thread=$2", posts[i].Parent, threadId).Scan(&id);
-			if err != nil {
-				return err
-			}
-		}
+		//fmt.Print(posts[i].Parent)
+		//var id int64
+		//if posts[i].Parent != 0 {
+		//	err := pool.QueryRow(`SELECT "pID" FROM posts WHERE id=$1 AND thread=$2`, posts[i].Parent, threadId).Scan(&id);
+		//	if err != nil {
+		//		return err
+		//	}
+		//}
 
 		posts[i].Forum = forum
 		posts[i].Thread = threadId

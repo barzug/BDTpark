@@ -10,6 +10,7 @@ import (
 	"log"
 	"github.com/valyala/fasthttp"
 
+	"strconv"
 )
 
 func CreateThread(c *routing.Context) error {
@@ -61,8 +62,6 @@ func GetThread(c *routing.Context) error {
 	since := string(c.QueryArgs().Peek("since"))
 	desc := string(c.QueryArgs().Peek("desc"))
 
-
-
 	forum := new(models.Forums)
 	forum.Slug = slug
 	_, err := forum.GetForumBySlug(daemon.DB.Pool);
@@ -70,7 +69,7 @@ func GetThread(c *routing.Context) error {
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
 		return nil
 	}
-	threads, err := forum.GetAll(daemon.DB.Pool, limit, since, desc);
+	threads, err := forum.GetAllThreads(daemon.DB.Pool, limit, since, desc);
 	if err != nil {
 		log.Print(err)
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
@@ -79,4 +78,71 @@ func GetThread(c *routing.Context) error {
 	return nil
 }
 
+func GetThreadInfo(c *routing.Context) error {
+	slugOrId := c.Param("slug_or_id")
+	thread := new(models.Threads)
 
+	resultTread := models.Threads{}
+	var err error
+	if id, parseErr := strconv.ParseInt(slugOrId, 10, 64); parseErr == nil {
+		thread.TID = id
+		resultTread, err = thread.GetThreadById(daemon.DB.Pool);
+	} else {
+		thread.Slug = slugOrId
+		resultTread, err = thread.GetThreadBySlug(daemon.DB.Pool);
+	}
+	if err != nil {
+		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
+		return nil
+	}
+
+	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, resultTread)
+	return nil
+}
+
+func GetThreadPosts(c *routing.Context) error {
+	slugOrId := c.Param("slug_or_id")
+	thread := new(models.Threads)
+
+	resultTread := models.Threads{}
+	var err error
+	if id, parseErr := strconv.ParseInt(slugOrId, 10, 64); parseErr == nil {
+		thread.TID = id
+		resultTread, err = thread.GetThreadById(daemon.DB.Pool);
+	} else {
+		thread.Slug = slugOrId
+		resultTread, err = thread.GetThreadBySlug(daemon.DB.Pool);
+	}
+	if err != nil {
+		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
+		return nil
+	}
+
+	limit := string(c.QueryArgs().Peek("limit"))
+	sort := string(c.QueryArgs().Peek("sort"))
+	desc := string(c.QueryArgs().Peek("desc"))
+	since := string(c.QueryArgs().Peek("since"))
+
+
+	var posts []models.Posts
+	switch sort {
+	case "tree":
+
+
+	case "parent_tree":
+
+
+	case "flat":
+		fallthrough
+	default:
+		posts, err = resultTread.GetPostsWithFlatSort(daemon.DB.Pool, limit, since, desc);
+	}
+
+
+	if err != nil {
+		log.Print(err)
+		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
+	}
+	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, posts)
+	return nil
+}

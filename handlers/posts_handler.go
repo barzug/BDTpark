@@ -26,7 +26,7 @@ func CreatePosts(c *routing.Context) error {
 	thread := new(models.Threads)
 
 	resultTread := models.Threads{}
-	if id, err := strconv.ParseInt(slugOrId, 10, 64); err == nil {
+	if id, parseErr := strconv.ParseInt(slugOrId, 10, 64); parseErr == nil {
 		thread.TID = id
 		resultTread, err = thread.GetThreadById(daemon.DB.Pool);
 	} else {
@@ -53,7 +53,7 @@ func CreatePosts(c *routing.Context) error {
 		//	return nil
 		//}
 		log.Print(err)
-		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
+		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusConflict, nil)
 		return nil
 	}
 

@@ -4,6 +4,7 @@ import (
 	"time"
 	"github.com/jackc/pgx"
 	"../../utils"
+	"strconv"
 )
 
 type Threads struct {
@@ -54,7 +55,6 @@ func (thread *Threads) GetThreadBySlug(pool *pgx.ConnPool) (Threads, error) {
 	return resultThread, nil
 }
 
-
 func (thread *Threads) GetThreadById(pool *pgx.ConnPool) (Threads, error) {
 	resultThread := Threads{}
 	resultThread.TID = thread.TID
@@ -68,4 +68,41 @@ func (thread *Threads) GetThreadById(pool *pgx.ConnPool) (Threads, error) {
 	return resultThread, nil
 }
 
+func (thread *Threads) GetPostsWithFlatSort(pool *pgx.ConnPool, limit, since, desc string) ([]Posts, error) {
+	queryRow := `SELECT "pID", author, created, forum, message, thread, parent FROM posts WHERE thread = $1`
 
+	var params []interface{}
+	params = append(params, thread.TID)
+	if since != "" {
+		if desc == "true" {
+			queryRow += ` AND created <= $` + strconv.Itoa(len(params)+1)
+		} else {
+			queryRow += ` AND created >= $` + strconv.Itoa(len(params)+1)
+		}
+		params = append(params, since)
+	}
+	if desc == "true" {
+		queryRow += ` ORDER BY "pID" DESC`
+	} else {
+		queryRow += ` ORDER BY "pID" ASC`
+	}
+	if limit != "" {
+		queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
+		params = append(params, limit)
+	}
+
+	rows, err := pool.Query(queryRow, params...)
+	if err != nil {
+		return nil, err
+	}
+
+	resultPosts := []Posts{}
+
+	currentPostInRows := Posts{}
+	for rows.Next() {
+		rows.Scan(&currentPostInRows.PID, &currentPostInRows.Author, &currentPostInRows.Created, &currentPostInRows.Forum,
+			&currentPostInRows.Message, &currentPostInRows.Thread, &currentPostInRows.Parent)
+		resultPosts = append(resultPosts, currentPostInRows)
+	}
+	return resultPosts, nil
+}

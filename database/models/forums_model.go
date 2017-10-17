@@ -45,7 +45,7 @@ func (forum *Forums) GetForumBySlug(pool *pgx.ConnPool) (Forums, error) {
 	return resultForum, nil
 }
 
-func (forum *Forums) GetAll(pool *pgx.ConnPool, limit, since, desc string) ([]Threads, error) {
+func (forum *Forums) GetAllThreads(pool *pgx.ConnPool, limit, since, desc string) ([]Threads, error) {
 	queryRow := `SELECT "tID", author, created, forum, message, slug, title, votes FROM threads WHERE forum = $1`
 
 	var params []interface{}
