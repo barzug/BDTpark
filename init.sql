@@ -67,7 +67,7 @@ CREATE TABLE "threads" (
   "created" TIMESTAMP WITH TIME ZONE DEFAULT now(),
   "forum" CITEXT NOT NULL,
   "message" TEXT NOT NULL,
-  "slug" TEXT NOT NULL UNIQUE,
+  "slug" CITEXT NOT NULL UNIQUE,
   "title" TEXT NOT NULL,
   "votes" int4 NOT NULL DEFAULT '0',
   CONSTRAINT threads_pk PRIMARY KEY ("tID")
