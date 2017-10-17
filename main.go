@@ -31,7 +31,7 @@ func addRoutes(r *router.Routing) {
 	//r.AddRoute(&router.Route{Method: "GET", Path: "/api/thread/:slug_or_id/details", Function: foo})
 	//r.AddRoute(&router.Route{Method: "POST", Path: "/api/thread/:slug_or_id/details", Function: foo})
 	//r.AddRoute(&router.Route{Method: "GET", Path: "/api/thread/:slug_or_id/posts", Function: foo})
-	//r.AddRoute(&router.Route{Method: "POST", Path: "/api/thread/:slug_or_id/vote", Function: foo})
+	r.AddRoute(&router.Route{Method: "POST", Path: "/api/thread/<slug_or_id>/vote", Function: h.VoteForThread})
 	//
 	r.AddRoute(&router.Route{Method: "POST", Path: "/api/user/<nickname>/create", Function: h.CreateUser})
 	r.AddRoute(&router.Route{Method: "GET", Path: "/api/user/<nickname>/profile", Function: h.GetUser})

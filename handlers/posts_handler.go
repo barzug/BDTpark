@@ -24,12 +24,10 @@ func CreatePosts(c *routing.Context) error {
 	created := time.Now()
 
 	thread := new(models.Threads)
-	log.Print(slugOrId)
 
 	resultTread := models.Threads{}
 	if id, err := strconv.ParseInt(slugOrId, 10, 64); err == nil {
 		thread.TID = id
-		log.Print(id)
 		resultTread, err = thread.GetThreadById(daemon.DB.Pool);
 	} else {
 		thread.Slug = slugOrId
@@ -40,8 +38,6 @@ func CreatePosts(c *routing.Context) error {
 		return nil
 	}
 
-	log.Print(resultTread.Forum)
-	log.Print(resultTread.TID)
 
 	if err := models.CreatePostsBySlice(daemon.DB.Pool, posts, resultTread.TID, created, resultTread.Forum); err != nil {
 		//if err == utils.UniqueError {

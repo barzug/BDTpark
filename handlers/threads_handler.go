@@ -9,7 +9,7 @@ import (
 	"github.com/qiangxue/fasthttp-routing"
 	"log"
 	"github.com/valyala/fasthttp"
-	"fmt"
+
 )
 
 func CreateThread(c *routing.Context) error {
@@ -34,7 +34,6 @@ func CreateThread(c *routing.Context) error {
 	thread.Author = threadAuthor.Nickname
 	thread.Forum = threadForum.Slug
 
-	fmt.Print(thread)
 	if err := thread.CreateThread(daemon.DB.Pool); err != nil {
 		if err == utils.UniqueError {
 			prevForum, err := thread.GetThreadBySlug(daemon.DB.Pool)

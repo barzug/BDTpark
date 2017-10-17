@@ -3,7 +3,7 @@ package models
 import (
 	"time"
 	"github.com/jackc/pgx"
-	"fmt"
+
 )
 
 type Posts struct {
@@ -45,9 +45,8 @@ func CreatePostsBySlice(pool *pgx.ConnPool, posts []Posts, threadId int64, creat
 			return err;
 		}
 	}
-	fmt.Print(posts)
 
-	_, err = tx.Exec("UPDATE forums SET posts = posts + $1 WHERE slug = $2", len(posts), forum)
+	_, err = tx.Exec(`UPDATE forums SET posts = posts + $1 WHERE slug = $2`, len(posts), forum)
 	if err != nil {
 		return err
 	}

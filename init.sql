@@ -21,71 +21,68 @@ DROP TABLE IF EXISTS "threads";
 DROP TABLE IF EXISTS "votes";
 
 CREATE TABLE "forums" (
-  "fID" serial NOT NULL,
-  "posts" int8 NOT NULL DEFAULT '0',
-  "slug" CITEXT NOT NULL UNIQUE,
-  "threads" int4 NOT NULL DEFAULT '0',
-  "title" TEXT NOT NULL,
-  "author" TEXT NOT NULL,
+  "fID"     SERIAL NOT NULL,
+  "posts"   INT8   NOT NULL DEFAULT '0',
+  "slug"    CITEXT NOT NULL UNIQUE,
+  "threads" INT4   NOT NULL DEFAULT '0',
+  "title"   TEXT   NOT NULL,
+  "author"  TEXT   NOT NULL,
   CONSTRAINT forums_pk PRIMARY KEY ("fID")
 ) WITH (
-OIDS=FALSE
+OIDS = FALSE
 );
 
 
 CREATE TABLE "users" (
-  "uID" serial NOT NULL,
-  "email" CITEXT NOT NULL UNIQUE,
+  "uID"      SERIAL NOT NULL,
+  "email"    CITEXT NOT NULL UNIQUE,
   "nickname" CITEXT NOT NULL UNIQUE,
   "fullname" TEXT,
-  "about" TEXT,
+  "about"    TEXT,
   CONSTRAINT users_pk PRIMARY KEY ("uID")
 ) WITH (
-OIDS=FALSE
+OIDS = FALSE
 );
 
 
 CREATE TABLE "posts" (
-  "pID" serial NOT NULL,
-  "author" TEXT NOT NULL,
-  "created" TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  "forum" TEXT NOT NULL,
-  "isEdited" BOOLEAN NOT NULL DEFAULT 'false',
-  "message" TEXT,
-  "parent" int8 DEFAULT '0',
-  "thread" bigint NOT NULL,
+  "pID"      SERIAL  NOT NULL,
+  "author"   TEXT    NOT NULL,
+  "created"  TIMESTAMP WITH TIME ZONE DEFAULT now(),
+  "forum"    TEXT    NOT NULL,
+  "isEdited" BOOLEAN NOT NULL         DEFAULT 'false',
+  "message"  TEXT,
+  "parent"   INT8                     DEFAULT '0',
+  "thread"   BIGINT  NOT NULL,
   CONSTRAINT posts_pk PRIMARY KEY ("pID")
 ) WITH (
-OIDS=FALSE
+OIDS = FALSE
 );
-
 
 
 CREATE TABLE "threads" (
-  "tID" serial NOT NULL,
-  "author" TEXT NOT NULL,
+  "tID"     SERIAL NOT NULL,
+  "author"  TEXT   NOT NULL,
   "created" TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  "forum" CITEXT NOT NULL,
-  "message" TEXT NOT NULL,
-  "slug" CITEXT NOT NULL UNIQUE,
-  "title" TEXT NOT NULL,
-  "votes" int4 NOT NULL DEFAULT '0',
+  "forum"   CITEXT NOT NULL,
+  "message" TEXT   NOT NULL,
+  "slug"    CITEXT NOT NULL UNIQUE,
+  "title"   TEXT   NOT NULL,
+  "votes"   INT4   NOT NULL          DEFAULT '0',
   CONSTRAINT threads_pk PRIMARY KEY ("tID")
 ) WITH (
-OIDS=FALSE
+OIDS = FALSE
 );
-
 
 
 CREATE TABLE "votes" (
-  "voice" int2,
-  "user" bigint NOT NULL,
-  "thread" bigint NOT NULL
+  "voice"  INT2,
+  "user"   CITEXT NOT NULL,
+  "thread" BIGINT NOT NULL,
+  UNIQUE ("user", "thread")
 ) WITH (
-OIDS=FALSE
+OIDS = FALSE
 );
-
-
 
 -- ALTER TABLE "posts" ADD CONSTRAINT "posts_fk0" FOREIGN KEY ("author") REFERENCES "users"("uID");
 -- ALTER TABLE "posts" ADD CONSTRAINT "posts_fk1" FOREIGN KEY ("thread") REFERENCES "threads"("tID");
