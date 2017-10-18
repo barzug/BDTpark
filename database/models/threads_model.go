@@ -5,6 +5,7 @@ import (
 	"github.com/jackc/pgx"
 	"../../utils"
 	"strconv"
+	"log"
 )
 
 type Threads struct {
@@ -90,7 +91,11 @@ func (thread *Threads) GetPostsWithFlatSort(pool *pgx.ConnPool, limit, since, de
 	var params []interface{}
 	params = append(params, thread.TID)
 	if since != "" {
-		queryRow += ` AND "pID" > $` + strconv.Itoa(len(params)+1)
+		if desc == "true" {
+			queryRow += ` AND "pID" < $` + strconv.Itoa(len(params)+1)
+		} else {
+			queryRow += ` AND "pID" > $` + strconv.Itoa(len(params)+1)
+		}
 		params = append(params, since)
 	}
 	if desc == "true" {
@@ -125,7 +130,11 @@ func (thread *Threads) GetPostsWithTreeSort(pool *pgx.ConnPool, limit, since, de
 	var params []interface{}
 	params = append(params, thread.TID)
 	if since != "" {
-		queryRow += ` AND "pID" <= $` + strconv.Itoa(len(params)+1)
+		if desc == "true" {
+			queryRow += ` AND path < (SELECT path FROM posts WHERE "pID" = $` + strconv.Itoa(len(params)+1) + `)`
+		} else {
+			queryRow += ` AND path > (SELECT path FROM posts WHERE "pID" = $` + strconv.Itoa(len(params)+1) + `)`
+		}
 		params = append(params, since)
 	}
 	if desc == "true" {
@@ -154,13 +163,45 @@ func (thread *Threads) GetPostsWithTreeSort(pool *pgx.ConnPool, limit, since, de
 	return resultPosts, nil
 }
 
+//SELECT * FROM posts WHERE thread = 119 AND path[1] in (SELECT "pID" FROM posts
+//WHERE thread = 119 AND parent = 0 LIMIT 3
+//) ORDER BY path ASC;
+
+//SELECT * FROM posts WHERE thread = 119 AND path[1] in (SELECT "pID" FROM posts
+//WHERE thread = 119 AND parent = 0 ORDER BY path DESC LIMIT 3 //поч desc
+//) AND path > (SELECT path FROM posts WHERE "pID" = 2038) ORDER BY path ASC;
 func (thread *Threads) GetPostsWithParentTreeSort(pool *pgx.ConnPool, limit, since, desc string) ([]Posts, error) {
-	queryRow := `SELECT "pID", author, created, forum, message, thread, parent FROM posts WHERE thread = $1`
+	queryRow := `SELECT "pID", author, created, forum, message, thread, parent FROM posts WHERE thread = $1 AND path[1] in (SELECT "pID" FROM posts
+	WHERE thread = $1 AND parent = 0 `
 
 	var params []interface{}
 	params = append(params, thread.TID)
+
+	if since == "" { //почему так?
+		if desc == "true" {
+			queryRow += ` ORDER BY path DESC`
+		} else {
+			queryRow += ` ORDER BY path ASC`
+		}
+	} else {
+		if desc != "true" {
+			queryRow += ` ORDER BY path DESC`
+		} else {
+			queryRow += ` ORDER BY path ASC`
+		}
+	}
+
+	if limit != "" {
+		queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
+		params = append(params, limit)
+	}
+	queryRow += `)`
 	if since != "" {
-		queryRow += ` AND "pID" >= $` + strconv.Itoa(len(params)+1)
+		if desc == "true" {
+			queryRow += ` AND path < (SELECT path FROM posts WHERE "pID" = $` + strconv.Itoa(len(params)+1) + `)`
+		} else {
+			queryRow += ` AND path > (SELECT path FROM posts WHERE "pID" = $` + strconv.Itoa(len(params)+1) + `)`
+		}
 		params = append(params, since)
 	}
 	if desc == "true" {
@@ -168,11 +209,11 @@ func (thread *Threads) GetPostsWithParentTreeSort(pool *pgx.ConnPool, limit, sin
 	} else {
 		queryRow += ` ORDER BY path ASC`
 	}
-	if limit != "" {
-		queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
-		params = append(params, limit)
-	}
-
+	//if limit != "" {
+	//	queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
+	//	params = append(params, limit)
+	//}
+	log.Print(queryRow)
 	rows, err := pool.Query(queryRow, params...)
 	if err != nil {
 		return nil, err

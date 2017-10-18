@@ -87,3 +87,48 @@ func (forum *Forums) GetAllThreads(pool *pgx.ConnPool, limit, since, desc string
 	}
 	return resultThreads, nil
 }
+
+
+//func (forum *Forums) GetUsers(pool *pgx.ConnPool, limit, since, desc string) ([]Users, error) {
+//	queryRow := `SELECT u.nickname, u.email, u.fullname, u.about FROM users AS u WHERE u.nickname IN (
+//	 SELECT f.author `
+//
+//	var params []interface{}
+//	params = append(params, user.Nickname)
+//	if since != "" {
+//		//if desc == "true" {
+//		queryRow += ` AND nickname < $` + strconv.Itoa(len(params) + 1)
+//		//} else {
+//		//	queryRow += ` AND nickname > $` + strconv.Itoa(len(params) + 1)
+//		//}
+//		params = append(params, since)
+//	}
+//	if desc == "true" {
+//		queryRow += ` ORDER BY u.nickname DESC`
+//	} else {
+//		queryRow += ` ORDER BY u.nickname ASC`
+//	}
+//	if limit != "" {
+//		queryRow += ` LIMIT $` + strconv.Itoa(len(params) + 1)
+//		params = append(params, limit)
+//	}
+//
+//
+//
+//	rows, err := pool.Query(queryRow, params...)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//
+//	resultUsers := []Users{}
+//
+//
+//	currentUserInRows := Users{}
+//	for rows.Next() {
+//		rows.Scan(&currentUserInRows.Nickname, &currentUserInRows.Email, &currentUserInRows.Fullname, &currentUserInRows.About)
+//		resultUsers = append(resultUsers, currentUserInRows)
+//	}
+//	return resultUsers, nil
+//}
+//

@@ -2,7 +2,6 @@ package models
 
 import (
 	"github.com/jackc/pgx"
-	"github.com/labstack/gommon/log"
 )
 
 type Votes struct {
@@ -21,7 +20,6 @@ func (vote *Votes) VoteForThreadAndReturningVotes(pool *pgx.ConnPool) (int32, er
 	//	vote.User, vote.Thread, vote.Voice)
 
 	var votesNumber int32
-	log.Print(vote.Voice)
 	//thread.setVotes(template.queryForObject("SELECT t.votes FROM threads t " +
 	//	"WHERE t.id = ?", Integer.class, thread.getId()));
 	pool.QueryRow(`SELECT SUM(voice) AS voiceSum FROM votes WHERE "thread" = $1`, vote.Thread).Scan(&votesNumber)

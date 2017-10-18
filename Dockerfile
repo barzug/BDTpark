@@ -63,7 +63,7 @@ RUN go get -v github.com/qiangxue/fasthttp-routing
 RUN go get -v github.com/valyala/fasthttp
 RUN go get -v github.com/fasthttp-contrib/render
 
-EXPOSE 5000
+EXPOSE 8000
 
 USER postgres
 CMD ["/usr/lib/postgresql/9.6/bin/postgres", "-D", "/var/lib/postgresql/9.6/main", "-c", "config_file=/etc/postgresql/9.6/main/postgresql.conf"]

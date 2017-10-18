@@ -84,3 +84,30 @@ func UpdateUser(c *routing.Context) error {
 	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, user)
 	return nil
 }
+
+//func GetForumUsers(c *routing.Context) error {
+//	slug := c.Param("slug")
+//	forum := new(models.Forums)
+//	forum.Slug = slug
+//
+//	_, err := forum.GetForumBySlug(daemon.DB.Pool);
+//	if err != nil {
+//		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
+//		return nil
+//	}
+//
+//	limit := string(c.QueryArgs().Peek("limit"))
+//	since := string(c.QueryArgs().Peek("since"))
+//	desc := string(c.QueryArgs().Peek("desc"))
+//
+//
+//	users, err := forum.GetUsers(daemon.DB.Pool, limit, since, desc)
+//	if err != nil {
+//		log.Fatal(err)
+//		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
+//		return nil
+//	}
+//
+//	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, users)
+//	return nil
+//}

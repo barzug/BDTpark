@@ -91,3 +91,4 @@ func (user *Users) UpdateUser(pool *pgx.ConnPool) error {
 	}
 	return nil
 }
+
