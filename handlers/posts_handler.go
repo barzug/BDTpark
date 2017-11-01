@@ -115,15 +115,15 @@ func UpdatePost(c *routing.Context) error {
 
 
 
-	//if utils.CheckEmpty(post) {
-	//	prevUser, err := user.GetUserByLogin(daemon.DB.Pool)
-	//	if err != nil {
-	//		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
-	//		return nil
-	//	}
-	//	utils.AdditionObject(user, &prevUser)
-	//
-	//}
+	if post.Message == "" {
+		prevPost, err := post.GetPostById(daemon.DB.Pool)
+		if err != nil {
+			daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
+			return nil
+		}
+		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, prevPost)
+		return nil
+	}
 
 	if err := post.UpdatePost(daemon.DB.Pool); err != nil {
 		if err == utils.UniqueError {

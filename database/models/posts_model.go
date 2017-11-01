@@ -69,8 +69,8 @@ func CreatePostsBySlice(pool *pgx.ConnPool, posts []Posts, threadId int64, creat
 
 func (post *Posts) GetPostById(pool *pgx.ConnPool) (Posts, error) {
 	resultPost := Posts{PID:post.PID}
-	err := pool.QueryRow(`SELECT author, created, forum, message, thread FROM posts WHERE "pID" = $1`,
-		post.PID).Scan(&resultPost.Author, &resultPost.Created, &resultPost.Forum, &resultPost.Message, &resultPost.Thread )
+	err := pool.QueryRow(`SELECT author, created, forum, message, thread, "isEdited" FROM posts WHERE "pID" = $1`,
+		post.PID).Scan(&resultPost.Author, &resultPost.Created, &resultPost.Forum, &resultPost.Message, &resultPost.Thread, &resultPost.IsEdited)
 
 	if err != nil {
 		return resultPost, err
