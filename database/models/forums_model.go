@@ -6,7 +6,6 @@ import (
 	"strconv"
 
 	"../../utils"
-	"log"
 )
 
 type Forums struct {
@@ -87,7 +86,6 @@ func (forum *Forums) GetAllThreads(pool *pgx.ConnPool, limit, since, desc string
 }
 
 func (forum *Forums) GetMembers(pool *pgx.ConnPool, limit, since, desc string) ([]Users, error) {
-	log.Print(limit + " " + since + " " + desc)
 	queryRow := `SELECT u.about, u.email, u.fullname, u.nickname FROM members AS m
  	JOIN users as u ON u.nickname = m.author AND m.forum = $1`
 
@@ -111,7 +109,6 @@ func (forum *Forums) GetMembers(pool *pgx.ConnPool, limit, since, desc string) (
 		params = append(params, limit)
 	}
 
-	log.Print(queryRow)
 	rows, err := pool.Query(queryRow, params...)
 	if err != nil {
 		return nil, err

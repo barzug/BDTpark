@@ -9,7 +9,7 @@ import (
 
 	"github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
-	"log"
+
 )
 
 func CreateUser(c *routing.Context) error {
@@ -104,12 +104,10 @@ func UpdateUser(c *routing.Context) error {
 
  	users, err := forum.GetMembers(daemon.DB.Pool, limit, since, desc)
  	if err != nil {
- 		log.Fatal(err)
  		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
  		return nil
  	}
 
- 	log.Print(users)
  	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, users)
  	return nil
  }

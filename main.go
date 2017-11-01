@@ -21,8 +21,8 @@ func addRoutes(r *router.Routing) {
 	r.AddRoute(&router.Route{Method: "GET", Path: "/api/forum/<slug>/threads", Function: h.GetThread})
 	 r.AddRoute(&router.Route{Method: "GET", Path: "/api/forum/<slug>/users", Function: h.GetForumUsers})
 
-	//r.AddRoute(&router.Route{Method: "GET", Path: "/api/post/<id>/details", Function: h.GetPost})
-	//r.AddRoute(&router.Route{Method: "POST", Path: "/api/post/<id>/details", Function: foo})
+	r.AddRoute(&router.Route{Method: "GET", Path: "/api/post/<id>/details", Function: h.GetPost})
+	r.AddRoute(&router.Route{Method: "POST", Path: "/api/post/<id>/details", Function: h.UpdatePost})
 	//
 	//r.AddRoute(&router.Route{Method: "POST", Path: "/api/service/clear", Function: foo})
 	//r.AddRoute(&router.Route{Method: "GET", Path: "/api/service/status", Function: foo})

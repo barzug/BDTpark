@@ -3,6 +3,8 @@ package models
 import (
 	"time"
 	"github.com/jackc/pgx"
+	"../../utils"
+	"log"
 )
 
 type Posts struct {
@@ -10,7 +12,7 @@ type Posts struct {
 	Author   string    `json:"author"`
 	Created  time.Time `json:"created"`
 	Forum    string    `json:"forum"`
-	IsEdited bool      `json:"isedited"`
+	IsEdited bool      `json:"isEdited"`
 	Message  string    `json:"message"`
 	Parent   int64     `json:"parent"`
 	Thread   int64     `json:"thread"`
@@ -62,3 +64,37 @@ func CreatePostsBySlice(pool *pgx.ConnPool, posts []Posts, threadId int64, creat
 
 	return nil
 }
+
+
+
+func (post *Posts) GetPostById(pool *pgx.ConnPool) (Posts, error) {
+	resultPost := Posts{PID:post.PID}
+	err := pool.QueryRow(`SELECT author, created, forum, message, thread FROM posts WHERE "pID" = $1`,
+		post.PID).Scan(&resultPost.Author, &resultPost.Created, &resultPost.Forum, &resultPost.Message, &resultPost.Thread )
+
+	if err != nil {
+		return resultPost, err
+	}
+	return resultPost, nil
+}
+
+
+func (post *Posts) UpdatePost(pool *pgx.ConnPool) error {
+	var id int64
+	log.Print(post.PID)
+	err := pool.QueryRow(`UPDATE posts SET message = $1, "isEdited" = true`+
+		` WHERE "pID" = $2 RETURNING "pID", author, created, forum, "isEdited", thread;`,
+		post.Message, post.PID).Scan(&id, &post.Author, &post.Created, &post.Forum, &post.IsEdited, &post.Thread)
+	if err != nil {
+		if pgerr, ok := err.(pgx.PgError); ok {
+			if pgerr.ConstraintName == "post_pk"  {
+				return utils.UniqueError
+			} else {
+				return err
+			}
+		}
+		return err
+	}
+	return nil
+}
+
