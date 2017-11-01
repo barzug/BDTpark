@@ -140,17 +140,17 @@ func UpdatePost(c *routing.Context) error {
 		return nil
 	}
 
-	if post.Message == "" {
-		prevPost, err := post.GetPostById(daemon.DB.Pool)
-		if err != nil {
-			daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
-			return nil
-		}
+	prevPost, err := post.GetPostById(daemon.DB.Pool)
+	if err != nil {
+		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
+		return nil
+	}
+	if post.Message == "" || strings.Compare(prevPost.Message, post.Message) == 0 {
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, prevPost)
 		return nil
 	}
 
-	if err := post.UpdatePost(daemon.DB.Pool); err != nil {
+	if err = post.UpdatePost(daemon.DB.Pool); err != nil {
 		if err == utils.UniqueError {
 			daemon.Render.JSON(c.RequestCtx, fasthttp.StatusConflict, nil)
 			return nil
