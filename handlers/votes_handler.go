@@ -16,7 +16,7 @@ func VoteForThread(c *routing.Context) error {
 	resultTread := models.Threads{}
 
 	var err error
-	if id, err := strconv.ParseInt(slugOrId, 10, 64); err == nil {
+	if id, parseErr := strconv.ParseInt(slugOrId, 10, 64); parseErr == nil {
 		thread.TID = id
 		resultTread, err = thread.GetThreadById(daemon.DB.Pool);
 	} else {
