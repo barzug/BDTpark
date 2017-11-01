@@ -4,7 +4,6 @@ import (
 	"time"
 	"github.com/jackc/pgx"
 	"../../utils"
-	"log"
 )
 
 type Posts struct {
@@ -41,6 +40,13 @@ func CreatePostsBySlice(pool *pgx.ConnPool, posts []Posts, threadId int64, creat
 		posts[i].Forum = forum
 		posts[i].Thread = threadId
 		posts[i].Created = created
+
+		var nickname string
+		err := pool.QueryRow(`SELECT nickname FROM users WHERE nickname = $1`, posts[i].Author).Scan(&nickname)
+		if err != nil {
+			tx.Rollback()
+			return utils.NotFoundError
+		}
 
 		err = tx.QueryRow(`INSERT INTO posts ("pID", message, thread, parent, author, created, forum, path)
 										VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING "pID"`,
@@ -81,7 +87,6 @@ func (post *Posts) GetPostById(pool *pgx.ConnPool) (Posts, error) {
 
 func (post *Posts) UpdatePost(pool *pgx.ConnPool) error {
 	var id int64
-	log.Print(post.PID)
 	err := pool.QueryRow(`UPDATE posts SET message = $1, "isEdited" = true`+
 		` WHERE "pID" = $2 RETURNING "pID", author, created, forum, "isEdited", thread;`,
 		post.Message, post.PID).Scan(&id, &post.Author, &post.Created, &post.Forum, &post.IsEdited, &post.Thread)
@@ -98,3 +103,8 @@ func (post *Posts) UpdatePost(pool *pgx.ConnPool) error {
 	return nil
 }
 
+func PostsCount(pool *pgx.ConnPool) (int32, error) {
+	var count int32
+	err := pool.QueryRow("SELECT COUNT(*) FROM posts").Scan(&count)
+	return count, err
+}

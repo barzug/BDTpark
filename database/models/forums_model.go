@@ -123,3 +123,9 @@ func (forum *Forums) GetMembers(pool *pgx.ConnPool, limit, since, desc string) (
 	}
 	return resultUsers, nil
 }
+
+func ForumsCount(pool *pgx.ConnPool) (int32, error) {
+	var count int32
+	err := pool.QueryRow("SELECT COUNT(*) FROM forums").Scan(&count)
+	return count, err
+}

@@ -38,18 +38,10 @@ func CreatePosts(c *routing.Context) error {
 	}
 
 	if err := models.CreatePostsBySlice(daemon.DB.Pool, posts, resultTread.TID, created, resultTread.Forum); err != nil {
-		//if err == utils.UniqueError {
-		//	prevForum, err := thread.GetThreadBySlug(daemon.DB.Pool)
-		//
-		//	if err != nil {
-		//		//log.Fatal(err)
-		//		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
-		//		return err
-		//	}
-		//
-		//	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusConflict, prevForum)
-		//	return nil
-		//}
+		if err == utils.NotFoundError {
+			daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
+			return nil
+		}
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusConflict, nil)
 		return nil
 	}

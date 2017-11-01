@@ -166,13 +166,6 @@ func (thread *Threads) GetPostsWithTreeSort(pool *pgx.ConnPool, limit, since, de
 	return resultPosts, nil
 }
 
-//SELECT * FROM posts WHERE thread = 119 AND path[1] in (SELECT "pID" FROM posts
-//WHERE thread = 119 AND parent = 0 LIMIT 3
-//) ORDER BY path ASC;
-
-//SELECT * FROM posts WHERE thread = 119 AND path[1] in (SELECT "pID" FROM posts
-//WHERE thread = 119 AND parent = 0 ORDER BY path DESC LIMIT 3 //поч desc
-//) AND path > (SELECT path FROM posts WHERE "pID" = 2038) ORDER BY path ASC;
 func (thread *Threads) GetPostsWithParentTreeSort(pool *pgx.ConnPool, limit, since, desc string) ([]Posts, error) {
 	queryRow := `SELECT "pID", author, created, forum, message, thread, parent FROM posts WHERE thread = $1 AND path[1] in (SELECT "pID" FROM posts
 	WHERE thread = $1 AND parent = 0 `
@@ -240,4 +233,11 @@ func (thread *Threads) UpdateThread(pool *pgx.ConnPool) error {
 		return err
 	}
 	return nil
+}
+
+
+func ThreadsCount(pool *pgx.ConnPool) (int32, error) {
+	var count int32
+	err := pool.QueryRow("SELECT COUNT(*) FROM threads").Scan(&count)
+	return count, err
 }

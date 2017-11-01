@@ -8,7 +8,6 @@ import (
 )
 
 type Users struct {
-	//UID      int64
 	Email    string `json:"email"`
 	Nickname string `json:"nickname"`
 	Fullname string `json:"fullname"`
@@ -92,3 +91,8 @@ func (user *Users) UpdateUser(pool *pgx.ConnPool) error {
 	return nil
 }
 
+func UsersCount(pool *pgx.ConnPool) (int32, error) {
+	var count int32
+	err := pool.QueryRow("SELECT COUNT(*) FROM users").Scan(&count)
+	return count, err
+}
