@@ -3,7 +3,6 @@ package models
 import (
 	"time"
 	"github.com/jackc/pgx"
-	"log"
 )
 
 type Posts struct {
@@ -23,7 +22,6 @@ func CreatePostsBySlice(pool *pgx.ConnPool, posts []Posts, threadId int64, creat
 		return err
 	}
 	defer tx.Rollback()
-
 
 	for i := 0; i < len(posts); i++ {
 		path := []int64{}
@@ -46,9 +44,10 @@ func CreatePostsBySlice(pool *pgx.ConnPool, posts []Posts, threadId int64, creat
 										VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING "pID"`,
 			&posts[i].PID, &posts[i].Message, &posts[i].Thread, &posts[i].Parent, &posts[i].Author, &posts[i].Created, &posts[i].Forum, &path).Scan(&posts[i].PID);
 		if err != nil {
-			log.Print(err)
 			return err;
 		}
+
+		AddMember(tx, posts[i].Forum, posts[i].Author)
 	}
 
 	_, err = tx.Exec(`UPDATE forums SET posts = posts + $1 WHERE slug = $2`, len(posts), forum)

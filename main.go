@@ -4,6 +4,7 @@ import (
 	"./daemon"
 
 	"log"
+
 	h "./handlers"
 
 	"./router"
@@ -11,17 +12,16 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-const port = ":8000"
-
+const port = ":5000"
 
 func addRoutes(r *router.Routing) {
 	r.AddRoute(&router.Route{Method: "POST", Path: "/api/forum/create", Function: h.CreateForum})
 	r.AddRoute(&router.Route{Method: "POST", Path: "/api/forum/<slug>/create", Function: h.CreateThread})
 	r.AddRoute(&router.Route{Method: "GET", Path: "/api/forum/<slug>/details", Function: h.GetForumDetails})
 	r.AddRoute(&router.Route{Method: "GET", Path: "/api/forum/<slug>/threads", Function: h.GetThread})
-	//r.AddRoute(&router.Route{Method: "GET", Path: "/api/forum/<slug>/users", Function: h.GetForumUsers})
+	 r.AddRoute(&router.Route{Method: "GET", Path: "/api/forum/<slug>/users", Function: h.GetForumUsers})
 
-	//r.AddRoute(&router.Route{Method: "GET", Path: "/api/post/<id>/details", Function: foo})
+	//r.AddRoute(&router.Route{Method: "GET", Path: "/api/post/<id>/details", Function: h.GetPost})
 	//r.AddRoute(&router.Route{Method: "POST", Path: "/api/post/<id>/details", Function: foo})
 	//
 	//r.AddRoute(&router.Route{Method: "POST", Path: "/api/service/clear", Function: foo})
@@ -37,7 +37,6 @@ func addRoutes(r *router.Routing) {
 	r.AddRoute(&router.Route{Method: "GET", Path: "/api/user/<nickname>/profile", Function: h.GetUser})
 	r.AddRoute(&router.Route{Method: "POST", Path: "/api/user/<nickname>/profile", Function: h.UpdateUser})
 }
-
 
 func main() {
 

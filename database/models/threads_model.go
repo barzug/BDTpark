@@ -1,11 +1,11 @@
 package models
 
 import (
-	"time"
-	"github.com/jackc/pgx"
-	"../../utils"
 	"strconv"
-	"log"
+	"time"
+
+	"../../utils"
+	"github.com/jackc/pgx"
 )
 
 type Threads struct {
@@ -46,6 +46,9 @@ func (thread *Threads) CreateThread(pool *pgx.ConnPool) error {
 		}
 		return err
 	}
+
+	 AddMember(tx, thread.Forum, thread.Author)
+
 	_, err = tx.Exec("UPDATE forums SET threads=threads+1 WHERE slug=$1", thread.Forum)
 	if err != nil {
 		return err
@@ -213,7 +216,6 @@ func (thread *Threads) GetPostsWithParentTreeSort(pool *pgx.ConnPool, limit, sin
 	//	queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
 	//	params = append(params, limit)
 	//}
-	log.Print(queryRow)
 	rows, err := pool.Query(queryRow, params...)
 	if err != nil {
 		return nil, err

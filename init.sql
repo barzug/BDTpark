@@ -20,6 +20,8 @@ DROP TABLE IF EXISTS "threads";
 
 DROP TABLE IF EXISTS "votes";
 
+DROP TABLE IF EXISTS "members";
+
 CREATE TABLE "forums" (
   "fID"     SERIAL NOT NULL,
   "posts"   INT8   NOT NULL DEFAULT '0',
@@ -54,7 +56,7 @@ CREATE TABLE "posts" (
   "message"  TEXT,
   "parent"   INT8                     DEFAULT '0',
   "thread"   BIGINT  NOT NULL,
-  "path"     INT8[],
+  "path"     INT8 [],
   CONSTRAINT posts_pk PRIMARY KEY ("pID")
 ) WITH (
 OIDS = FALSE
@@ -85,6 +87,14 @@ CREATE TABLE "votes" (
 OIDS = FALSE
 );
 
+
+CREATE TABLE IF NOT EXISTS "members" (
+  forum  CITEXT,
+  author CITEXT,
+  UNIQUE ("forum", "author")
+) WITH (
+OIDS = FALSE
+);
 -- ALTER TABLE "posts" ADD CONSTRAINT "posts_fk0" FOREIGN KEY ("author") REFERENCES "users"("uID");
 -- ALTER TABLE "posts" ADD CONSTRAINT "posts_fk1" FOREIGN KEY ("thread") REFERENCES "threads"("tID");
 --

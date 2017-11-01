@@ -10,6 +10,7 @@ import (
 	"github.com/qiangxue/fasthttp-routing"
 	"time"
 	"strconv"
+	"os/user"
 )
 
 func CreatePosts(c *routing.Context) error {
@@ -57,3 +58,19 @@ func CreatePosts(c *routing.Context) error {
 	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusCreated, posts)
 	return nil
 }
+
+//func GetPost(c *routing.Context) error {
+//	id := c.Param("id")
+//
+//	post := new(models.Posts)
+//	post.PID = id
+//
+//	resultPost, err := user.GetPostById(daemon.DB.Pool)
+//	if err != nil {
+//		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
+//		return nil
+//	}
+//
+//	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, resultPost)
+//	return nil
+//}
