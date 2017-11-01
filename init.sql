@@ -69,13 +69,16 @@ CREATE TABLE "threads" (
   "created" TIMESTAMP WITH TIME ZONE DEFAULT now(),
   "forum"   CITEXT NOT NULL,
   "message" TEXT   NOT NULL,
-  "slug"    CITEXT NOT NULL UNIQUE,
+  "slug"    CITEXT,
   "title"   TEXT   NOT NULL,
   "votes"   INT4   NOT NULL          DEFAULT '0',
   CONSTRAINT threads_pk PRIMARY KEY ("tID")
 ) WITH (
 OIDS = FALSE
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS threads_slug_key ON threads (slug) WHERE slug != '';
+
 
 
 CREATE TABLE "votes" (

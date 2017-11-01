@@ -22,11 +22,6 @@ type Threads struct {
 func (thread *Threads) CreateThread(pool *pgx.ConnPool) error {
 	var id int64
 
-	slug := thread.Slug
-	if slug == "" {
-		slug = thread.Forum
-	}
-
 	tx, err := pool.Begin()
 	if err != nil {
 		return err
@@ -35,7 +30,7 @@ func (thread *Threads) CreateThread(pool *pgx.ConnPool) error {
 
 	err = tx.QueryRow(`INSERT INTO threads (author, created, message, slug, title, forum)`+
 		`VALUES ($1, $2, $3, $4, $5, $6) RETURNING "tID";`,
-		thread.Author, thread.Created, thread.Message, slug, thread.Title, thread.Forum).Scan(&id)
+		thread.Author, thread.Created, thread.Message, thread.Slug, thread.Title, thread.Forum).Scan(&id)
 	if err != nil {
 		if pgerr, ok := err.(pgx.PgError); ok {
 			if pgerr.ConstraintName == "threads_slug_key" {
@@ -47,7 +42,7 @@ func (thread *Threads) CreateThread(pool *pgx.ConnPool) error {
 		return err
 	}
 
-	 AddMember(tx, thread.Forum, thread.Author)
+	AddMember(tx, thread.Forum, thread.Author)
 
 	_, err = tx.Exec("UPDATE forums SET threads=threads+1 WHERE slug=$1", thread.Forum)
 	if err != nil {
@@ -68,7 +63,6 @@ func (thread *Threads) GetThreadBySlug(pool *pgx.ConnPool) (Threads, error) {
 	err := pool.QueryRow(`SELECT "tID", author, created, forum, message, title, votes, slug FROM threads WHERE slug = $1`,
 		thread.Slug).Scan(&resultThread.TID, &resultThread.Author, &resultThread.Created, &resultThread.Forum,
 		&resultThread.Message, &resultThread.Title, &resultThread.Votes, &resultThread.Slug)
-
 	if err != nil {
 		return resultThread, err
 	}
@@ -234,7 +228,6 @@ func (thread *Threads) UpdateThread(pool *pgx.ConnPool) error {
 	}
 	return nil
 }
-
 
 func ThreadsCount(pool *pgx.ConnPool) (int32, error) {
 	var count int32

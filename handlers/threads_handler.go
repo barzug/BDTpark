@@ -38,7 +38,6 @@ func CreateThread(c *routing.Context) error {
 	if err := thread.CreateThread(daemon.DB.Pool); err != nil {
 		if err == utils.UniqueError {
 			prevForum, err := thread.GetThreadBySlug(daemon.DB.Pool)
-
 			if err != nil {
 				daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
 				return err
@@ -47,10 +46,9 @@ func CreateThread(c *routing.Context) error {
 			daemon.Render.JSON(c.RequestCtx, fasthttp.StatusConflict, prevForum)
 			return nil
 		}
-		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, thread)
+		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
 		return nil
 	}
-
 	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusCreated, thread)
 	return nil
 }
