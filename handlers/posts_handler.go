@@ -10,6 +10,7 @@ import (
 	"github.com/qiangxue/fasthttp-routing"
 	"time"
 	"strconv"
+	"strings"
 )
 
 func CreatePosts(c *routing.Context) error {
@@ -85,18 +86,44 @@ func GetPost(c *routing.Context) error {
 
 	response.Post = &resultPost
 
+	related := string(c.QueryArgs().Peek("related"))
+	if related != "" {
+		splitRelated := strings.Split(related, ",")
+		for _, entity := range splitRelated {
+			var err error
+			switch entity {
+			case "forum":
+				forum := new(models.Forums)
+				forum.Slug = resultPost.Forum
 
-	//related := string(c.QueryArgs().Peek("related"))
-	//if related != "" {
-	//
-	//}
+				var resultForum models.Forums
+				resultForum, err = forum.GetForumBySlug(daemon.DB.Pool)
+				response.Forum = &resultForum
+			case "user":
+				user := new(models.Users)
+				user.Nickname = resultPost.Author
 
+				var resultUser models.Users
+				resultUser, err = user.GetUserByLogin(daemon.DB.Pool)
+				response.Author = &resultUser
+			case "thread":
+				thread := new(models.Threads)
+				thread.TID = resultPost.Thread
+
+				var resultThread models.Threads
+				resultThread, err = thread.GetThreadById(daemon.DB.Pool)
+				response.Thread = &resultThread
+			}
+			if err != nil {
+				daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
+				return nil
+			}
+		}
+	}
 
 	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, response)
 	return nil
 }
-
-
 
 func UpdatePost(c *routing.Context) error {
 	stringId := c.Param("id")
@@ -112,8 +139,6 @@ func UpdatePost(c *routing.Context) error {
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
 		return nil
 	}
-
-
 
 	if post.Message == "" {
 		prevPost, err := post.GetPostById(daemon.DB.Pool)
