@@ -11,6 +11,7 @@ import (
 	"time"
 	"strconv"
 	"strings"
+	"log"
 )
 
 func CreatePosts(c *routing.Context) error {
@@ -42,6 +43,7 @@ func CreatePosts(c *routing.Context) error {
 			daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
 			return nil
 		}
+		log.Print(err)
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusConflict, nil)
 		return nil
 	}
