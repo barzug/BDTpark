@@ -42,7 +42,7 @@ func (thread *Threads) CreateThread(pool *pgx.ConnPool) error {
 		return err
 	}
 
-	AddMember(tx, thread.Forum, thread.Author)
+	AddMember(pool, thread.Forum, thread.Author)
 
 	_, err = tx.Exec("UPDATE forums SET threads=threads+1 WHERE slug=$1", thread.Forum)
 	if err != nil {
