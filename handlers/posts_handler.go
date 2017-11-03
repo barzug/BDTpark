@@ -11,7 +11,6 @@ import (
 	"time"
 	"strconv"
 	"strings"
-	"log"
 )
 
 func CreatePosts(c *routing.Context) error {
@@ -21,6 +20,7 @@ func CreatePosts(c *routing.Context) error {
 	if err != nil {
 		return err
 	}
+
 	created := time.Now()
 
 	thread := new(models.Threads)
@@ -43,11 +43,12 @@ func CreatePosts(c *routing.Context) error {
 			daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
 			return nil
 		}
-		log.Print(err)
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusConflict, nil)
 		return nil
 	}
-
+	//if len(posts) != 0 {
+	//	log.Print(posts[0].Created)
+	//}
 	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusCreated, posts)
 	return nil
 }
@@ -114,7 +115,7 @@ func GetPost(c *routing.Context) error {
 			}
 		}
 	}
-
+	//log.Print(resultPost.Created)
 	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, response)
 	return nil
 }

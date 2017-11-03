@@ -4,6 +4,7 @@ import (
 	"time"
 	"github.com/jackc/pgx"
 	"../../utils"
+	"log"
 )
 
 type Posts struct {
@@ -42,7 +43,6 @@ func CreatePostsBySlice(pool *pgx.ConnPool, posts []Posts, threadId int64, creat
 
 		posts[i].Forum = forum
 		posts[i].Thread = threadId
-		posts[i].Created = created
 
 		var nickname string
 		err = pool.QueryRow(`SELECT nickname FROM users WHERE nickname = $1`, posts[i].Author).Scan(&nickname)
@@ -51,9 +51,10 @@ func CreatePostsBySlice(pool *pgx.ConnPool, posts []Posts, threadId int64, creat
 		}
 
 		err = tx.QueryRow(`INSERT INTO posts ("pID", message, thread, parent, author, created, forum, path)
-										VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING "pID"`,
-			&posts[i].PID, &posts[i].Message, &posts[i].Thread, &posts[i].Parent, &posts[i].Author, &posts[i].Created, &posts[i].Forum, &path).Scan(&posts[i].PID);
+										VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING "pID", created`,
+			&posts[i].PID, &posts[i].Message, &posts[i].Thread, &posts[i].Parent, &posts[i].Author, created, &posts[i].Forum, &path).Scan(&posts[i].PID, &posts[i].Created);
 		if err != nil {
+			log.Print(err)
 			return err;
 		}
 

@@ -21,6 +21,7 @@ USER postgres
 RUN /etc/init.d/postgresql start &&\
     psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
     createdb -O docker docker &&\
+    psql -d docker -c "CREATE EXTENSION IF NOT EXISTS citext;" &&\
     /etc/init.d/postgresql stop
 
 # Adjust PostgreSQL configuration so that remote connections to the
@@ -63,7 +64,7 @@ RUN go get -v github.com/qiangxue/fasthttp-routing
 RUN go get -v github.com/valyala/fasthttp
 RUN go get -v github.com/fasthttp-contrib/render
 
-EXPOSE 8000
+EXPOSE 5000
 
 USER postgres
 CMD ["/usr/lib/postgresql/9.6/bin/postgres", "-D", "/var/lib/postgresql/9.6/main", "-c", "config_file=/etc/postgresql/9.6/main/postgresql.conf"]

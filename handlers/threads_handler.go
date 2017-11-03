@@ -7,7 +7,6 @@ import (
 
 	"encoding/json"
 	"github.com/qiangxue/fasthttp-routing"
-	"log"
 	"github.com/valyala/fasthttp"
 
 	"strconv"
@@ -17,7 +16,6 @@ func CreateThread(c *routing.Context) error {
 	slug := c.Param("slug")
 	thread := new(models.Threads)
 	if err := json.Unmarshal(c.PostBody(), thread); err != nil {
-		log.Print(err)
 		return err
 	}
 
@@ -69,9 +67,9 @@ func GetThread(c *routing.Context) error {
 	}
 	threads, err := forum.GetAllThreads(daemon.DB.Pool, limit, since, desc);
 	if err != nil {
-		log.Print(err)
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
 	}
+
 	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, threads)
 	return nil
 }
@@ -138,7 +136,6 @@ func GetThreadPosts(c *routing.Context) error {
 
 
 	if err != nil {
-		log.Print(err)
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
 	}
 	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, posts)
@@ -152,7 +149,6 @@ func UpdateThread(c *routing.Context) error {
 
 	thread := new(models.Threads)
 	if err := json.Unmarshal(c.PostBody(), thread); err != nil {
-		log.Print(err)
 		return err
 	}
 
@@ -176,7 +172,6 @@ func UpdateThread(c *routing.Context) error {
 	}
 
 	if err := thread.UpdateThread(daemon.DB.Pool); err != nil {
-		log.Fatal(err)
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
 		return nil
 	}
