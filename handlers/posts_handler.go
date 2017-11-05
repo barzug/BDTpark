@@ -11,6 +11,7 @@ import (
 	"time"
 	"strconv"
 	"strings"
+	"log"
 )
 
 func CreatePosts(c *routing.Context) error {
@@ -20,6 +21,7 @@ func CreatePosts(c *routing.Context) error {
 	if err != nil {
 		return err
 	}
+	log.Print(1)
 
 	created := time.Now()
 
@@ -46,9 +48,6 @@ func CreatePosts(c *routing.Context) error {
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusConflict, nil)
 		return nil
 	}
-	//if len(posts) != 0 {
-	//	log.Print(posts[0].Created)
-	//}
 	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusCreated, posts)
 	return nil
 }
@@ -60,6 +59,7 @@ func GetPost(c *routing.Context) error {
 		Author *models.Users   `json:"author,omitempty"`
 		Thread *models.Threads `json:"thread,omitempty"`
 	}
+	log.Print(2)
 
 	response := new(Response)
 
@@ -115,7 +115,6 @@ func GetPost(c *routing.Context) error {
 			}
 		}
 	}
-	//log.Print(resultPost.Created)
 	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, response)
 	return nil
 }
@@ -127,6 +126,7 @@ func UpdatePost(c *routing.Context) error {
 	if err := json.Unmarshal(c.PostBody(), post); err != nil {
 		return err
 	}
+	log.Print(3)
 
 	var parseErr error
 	post.PID, parseErr = strconv.ParseInt(stringId, 10, 64)

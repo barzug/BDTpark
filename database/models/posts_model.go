@@ -52,7 +52,7 @@ func CreatePostsBySlice(pool *pgx.ConnPool, posts []Posts, threadId int64, creat
 
 		err = tx.QueryRow(`INSERT INTO posts ("pID", message, thread, parent, author, created, forum, path)
 										VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING "pID", created`,
-			&posts[i].PID, &posts[i].Message, &posts[i].Thread, &posts[i].Parent, &posts[i].Author, created, &posts[i].Forum, &path).Scan(&posts[i].PID, &posts[i].Created);
+			&posts[i].PID, &posts[i].Message, &posts[i].Thread, &posts[i].Parent, &posts[i].Author, created.Format(time.RFC3339), &posts[i].Forum, &path).Scan(&posts[i].PID, &posts[i].Created);
 		if err != nil {
 			log.Print(err)
 			return err;
@@ -78,8 +78,8 @@ func CreatePostsBySlice(pool *pgx.ConnPool, posts []Posts, threadId int64, creat
 
 func (post *Posts) GetPostById(pool *pgx.ConnPool) (Posts, error) {
 	resultPost := Posts{PID: post.PID}
-	err := pool.QueryRow(`SELECT author, created, forum, message, thread, "isEdited" FROM posts WHERE "pID" = $1`,
-		post.PID).Scan(&resultPost.Author, &resultPost.Created, &resultPost.Forum, &resultPost.Message, &resultPost.Thread, &resultPost.IsEdited)
+	err := pool.QueryRow(`SELECT author, created, forum, message, thread, "isEdited", parent FROM posts WHERE "pID" = $1`,
+		post.PID).Scan(&resultPost.Author, &resultPost.Created, &resultPost.Forum, &resultPost.Message, &resultPost.Thread, &resultPost.IsEdited, &resultPost.Parent)
 
 	if err != nil {
 		return resultPost, err

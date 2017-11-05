@@ -28,9 +28,10 @@ func (thread *Threads) CreateThread(pool *pgx.ConnPool) error {
 	}
 	defer tx.Rollback()
 
+
 	err = tx.QueryRow(`INSERT INTO threads (author, created, message, slug, title, forum)`+
-		`VALUES ($1, $2, $3, $4, $5, $6) RETURNING "tID";`,
-		thread.Author, thread.Created, thread.Message, thread.Slug, thread.Title, thread.Forum).Scan(&id)
+		`VALUES ($1, $2, $3, $4, $5, $6) RETURNING "tID", created;`,
+		thread.Author, thread.Created, thread.Message, thread.Slug, thread.Title, thread.Forum).Scan(&id, &thread.Created)
 	if err != nil {
 		if pgerr, ok := err.(pgx.PgError); ok {
 			if pgerr.ConstraintName == "threads_slug_key" {
@@ -181,10 +182,10 @@ func (thread *Threads) GetPostsWithParentTreeSort(pool *pgx.ConnPool, limit, sin
 		}
 	}
 
-	if limit != "" {
-		queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
-		params = append(params, limit)
-	}
+	//if limit != "" {
+	//	queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
+	//	params = append(params, limit)
+	//}
 	queryRow += `)`
 	if since != "" {
 		if desc == "true" {
@@ -199,10 +200,10 @@ func (thread *Threads) GetPostsWithParentTreeSort(pool *pgx.ConnPool, limit, sin
 	} else {
 		queryRow += ` ORDER BY path ASC`
 	}
-	//if limit != "" {
-	//	queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
-	//	params = append(params, limit)
-	//}
+	if limit != "" {
+		queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
+		params = append(params, limit)
+	}
 	rows, err := pool.Query(queryRow, params...)
 	if err != nil {
 		return nil, err
