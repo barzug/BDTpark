@@ -10,7 +10,7 @@ import (
 	"github.com/valyala/fasthttp"
 
 	"strconv"
-	"log"
+	"sync"
 )
 
 func CreateThread(c *routing.Context) error {
@@ -19,21 +19,40 @@ func CreateThread(c *routing.Context) error {
 	if err := json.Unmarshal(c.PostBody(), thread); err != nil {
 		return err
 	}
-	log.Print(4)
 
-	author := models.Users{Nickname: thread.Author}
-	forum := models.Forums{Slug: slug}
+	waitData := &sync.WaitGroup{}
 
-	threadAuthor, errAuthor := author.GetUserByLogin(daemon.DB.Pool)
-	threadForum, errForum := forum.GetForumBySlug(daemon.DB.Pool)
+	var authorNickname string
+	var errAuthor error
+	waitData.Add(1)
+
+	go func(waitData *sync.WaitGroup) {
+		defer waitData.Done()
+		author := models.Users{Nickname: thread.Author}
+		author, errAuthor = author.GetUserByLogin(daemon.DB.Pool)
+		authorNickname = author.Nickname
+	}(waitData)
+
+	var forumSlug string
+	var errForum error
+	waitData.Add(1)
+
+	go func(waitData *sync.WaitGroup) {
+		defer waitData.Done()
+		forum := models.Forums{Slug: slug}
+		forum, errForum = forum.GetForumBySlug(daemon.DB.Pool)
+		forumSlug = forum.Slug
+	}(waitData)
+
+	waitData.Wait()
 
 	if errAuthor != nil || errForum != nil {
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
 		return nil
 	}
 
-	thread.Author = threadAuthor.Nickname
-	thread.Forum = threadForum.Slug
+	thread.Author = authorNickname
+	thread.Forum = forumSlug
 
 	if err := thread.CreateThread(daemon.DB.Pool); err != nil {
 		if err == utils.UniqueError {
@@ -49,14 +68,12 @@ func CreateThread(c *routing.Context) error {
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
 		return nil
 	}
-	//log.Print(thread.Created)
 	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusCreated, thread)
 	return nil
 }
 
 func GetThread(c *routing.Context) error {
 	slug := c.Param("slug")
-	log.Print(5)
 
 	limit := string(c.QueryArgs().Peek("limit"))
 	since := string(c.QueryArgs().Peek("since"))
@@ -83,7 +100,6 @@ func GetThread(c *routing.Context) error {
 func GetThreadInfo(c *routing.Context) error {
 	slugOrId := c.Param("slug_or_id")
 	thread := new(models.Threads)
-	log.Print(6)
 
 	resultTread := models.Threads{}
 	var err error
@@ -106,7 +122,6 @@ func GetThreadInfo(c *routing.Context) error {
 func GetThreadPosts(c *routing.Context) error {
 	slugOrId := c.Param("slug_or_id")
 	thread := new(models.Threads)
-	log.Print(7)
 
 	resultTread := models.Threads{}
 	var err error
@@ -144,14 +159,12 @@ func GetThreadPosts(c *routing.Context) error {
 	if err != nil {
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
 	}
-	log.Print(limit, sort, desc, since, posts)
 	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, posts)
 	return nil
 }
 
 func UpdateThread(c *routing.Context) error {
 	slugOrId := c.Param("slug_or_id")
-	log.Print(8)
 
 	thread := new(models.Threads)
 	if err := json.Unmarshal(c.PostBody(), thread); err != nil {
@@ -178,7 +191,6 @@ func UpdateThread(c *routing.Context) error {
 	}
 
 	if err := thread.UpdateThread(daemon.DB.Pool); err != nil {
-		log.Fatal(err)
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
 		return nil
 	}

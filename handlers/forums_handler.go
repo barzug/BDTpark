@@ -8,14 +8,12 @@ import (
 	"encoding/json"
 	"github.com/valyala/fasthttp"
 	"github.com/qiangxue/fasthttp-routing"
-	"log"
 )
 
 func CreateForum(c *routing.Context) error {
 
 	forum := new(models.Forums)
 	if err := json.Unmarshal(c.PostBody(), forum); err != nil {
-		log.Print(err)
 		return err
 	}
 

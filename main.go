@@ -42,7 +42,7 @@ func main() {
 
 	log.Printf("Server started")
 
-	err := daemon.Init("localhost", "postgres", "docker", "docker", 100)
+	err := daemon.Init("localhost", "postgres", "docker", "docker", 15)
 	if err != nil {
 		log.Fatal(err)
 	}

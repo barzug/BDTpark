@@ -5,7 +5,6 @@ import (
 	"github.com/valyala/fasthttp"
 	"../database/models"
 	"../daemon"
-	"log"
 )
 
 func GetStatus(c *routing.Context) error {
@@ -21,28 +20,24 @@ func GetStatus(c *routing.Context) error {
 
 	statusResponse.Forum, err = models.ForumsCount(daemon.DB.Pool)
 	if err != nil {
-		log.Print(err)
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
 		return nil
 	}
 
 	statusResponse.User, err = models.UsersCount(daemon.DB.Pool)
 	if err != nil {
-		log.Print(err)
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
 		return nil
 	}
 
 	statusResponse.Thread, err = models.ThreadsCount(daemon.DB.Pool)
 	if err != nil {
-		log.Print(err)
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
 		return nil
 	}
 
 	statusResponse.Post, err = models.PostsCount(daemon.DB.Pool)
 	if err != nil {
-		log.Print(err)
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
 		return nil
 	}
