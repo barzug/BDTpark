@@ -21,7 +21,7 @@ func (user *Users) CreateUser(pool *pgx.ConnPool) error {
 		user.Nickname, user.Email, user.Fullname, user.About).Scan(&id)
 	if err != nil {
 		if pgerr, ok := err.(pgx.PgError); ok {
-			if pgerr.ConstraintName == "users_nickname_key" || pgerr.ConstraintName == "users_email_key"  {
+			if pgerr.ConstraintName == "index_on_users_nickname" || pgerr.ConstraintName == "index_on_users_email"  {
 				return utils.UniqueError
 			} else {
 				return err
@@ -80,7 +80,7 @@ func (user *Users) UpdateUser(pool *pgx.ConnPool) error {
 		user.Email, user.Fullname, user.About, user.Nickname).Scan(&id)
 	if err != nil {
 		if pgerr, ok := err.(pgx.PgError); ok {
-			if pgerr.ConstraintName == "users_email_key"  {
+			if pgerr.ConstraintName == "index_on_users_email"  {
 				return utils.UniqueError
 			} else {
 				return err

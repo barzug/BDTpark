@@ -24,7 +24,7 @@ func (forum *Forums) CreateForum(pool *pgx.ConnPool) error {
 		forum.Slug, forum.Title, forum.Author).Scan(&id)
 	if err != nil {
 		if pgerr, ok := err.(pgx.PgError); ok {
-			if pgerr.ConstraintName == "forums_slug_key" {
+			if pgerr.ConstraintName == "index_on_forums_slug" {
 				return utils.UniqueError
 			} else {
 				return err

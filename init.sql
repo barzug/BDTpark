@@ -14,7 +14,7 @@ DROP TABLE IF EXISTS "members";
 CREATE TABLE "forums" (
   "fID"     SERIAL NOT NULL,
   "posts"   INT8   NOT NULL DEFAULT '0',
-  "slug"    CITEXT NOT NULL UNIQUE,
+  "slug"    CITEXT NOT NULL,
   "threads" INT4   NOT NULL DEFAULT '0',
   "title"   TEXT   NOT NULL,
   "author"  TEXT   NOT NULL,
@@ -23,17 +23,32 @@ CREATE TABLE "forums" (
 OIDS = FALSE
 );
 
+DROP INDEX IF EXISTS index_on_forums_slug;
+
+CREATE UNIQUE INDEX  index_on_forums_slug
+  ON forums (slug);
+
 
 CREATE TABLE "users" (
   "uID"      SERIAL NOT NULL,
-  "email"    CITEXT NOT NULL UNIQUE,
-  "nickname" CITEXT NOT NULL UNIQUE,
+  "email"    CITEXT NOT NULL,
+  "nickname" CITEXT NOT NULL,
   "fullname" TEXT,
   "about"    TEXT,
   CONSTRAINT users_pk PRIMARY KEY ("uID")
 ) WITH (
 OIDS = FALSE
 );
+
+DROP INDEX IF EXISTS index_on_users_email;
+
+CREATE UNIQUE INDEX index_on_users_email
+  ON users (email);
+
+DROP INDEX IF EXISTS index_on_users_nickname;
+
+CREATE UNIQUE INDEX index_on_users_nickname
+  ON users (nickname);
 
 
 CREATE TABLE "posts" (
@@ -66,8 +81,14 @@ CREATE TABLE "threads" (
 OIDS = FALSE
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS threads_slug_key ON threads (slug) WHERE slug != '';
+DROP INDEX IF EXISTS threads_slug_key;
 
+CREATE UNIQUE INDEX threads_slug_key ON threads (slug) WHERE slug != '';
+
+DROP INDEX IF EXISTS index_on_threads_tID;
+
+CREATE UNIQUE INDEX  index_on_threads_tID
+  ON threads ("tID");
 
 
 CREATE TABLE "votes" (

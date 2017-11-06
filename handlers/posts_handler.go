@@ -11,7 +11,6 @@ import (
 	"time"
 	"strconv"
 	"strings"
-	"log"
 )
 
 func CreatePosts(c *routing.Context) error {
@@ -35,16 +34,12 @@ func CreatePosts(c *routing.Context) error {
 		resultTread, err = thread.GetThreadBySlug(daemon.DB.Pool);
 	}
 	if err != nil {
-		log.Print(1)
-		log.Print(err)
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
 		return nil
 	}
 
 	if err := models.CreatePostsBySlice(daemon.DB.Pool, posts, resultTread.TID, created, resultTread.Forum); err != nil {
 		if err == utils.NotFoundError {
-			log.Print(2)
-			log.Print(err)
 			daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
 			return nil
 		}
