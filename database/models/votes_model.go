@@ -12,6 +12,14 @@ type Votes struct {
 	Thread int64  `json:"thread"`
 }
 
+
+//UPDATE t
+//SET
+//t.votes = t.votes + v.voice
+//FROM
+//threads AS t
+//INNER JOIN votes AS v ON v.thread = t."tID"
+//WHERE "user" = $1 AND t."tID" = $2
 func (vote *Votes) VoteForThreadAndReturningVotes(pool *pgx.ConnPool, slugOrId string) (Threads, error) {
 	var prevVote int32
 
