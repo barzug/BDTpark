@@ -1,11 +1,11 @@
 package models
 
 import (
-	"time"
-	"github.com/jackc/pgx"
-	"../../utils"
 	"strconv"
-	"log"
+	"time"
+
+	"../../utils"
+	"github.com/jackc/pgx"
 )
 
 type Threads struct {
@@ -22,20 +22,24 @@ type Threads struct {
 func (thread *Threads) CreateThread(pool *pgx.ConnPool) error {
 	var id int64
 
-	slug := thread.Slug
-	if slug == "" {
-		slug = thread.Forum
-	}
-
 	tx, err := pool.Begin()
 	if err != nil {
 		return err
 	}
 	defer tx.Rollback()
 
+	//waitData := &sync.WaitGroup{}
+	//waitData.Add(1)
+
+	//go func(waitData *sync.WaitGroup) {
+	//	defer waitData.Done()
+		tx.Exec("UPDATE forums SET threads=threads+1 WHERE slug=$1", thread.Forum)
+	//}(waitData)
+
+
 	err = tx.QueryRow(`INSERT INTO threads (author, created, message, slug, title, forum)`+
-		`VALUES ($1, $2, $3, $4, $5, $6) RETURNING "tID";`,
-		thread.Author, thread.Created, thread.Message, slug, thread.Title, thread.Forum).Scan(&id)
+		`VALUES ($1, $2, $3, $4, $5, $6) RETURNING "tID", created;`,
+		thread.Author, thread.Created, thread.Message, thread.Slug, thread.Title, thread.Forum).Scan(&id, &thread.Created)
 	if err != nil {
 		if pgerr, ok := err.(pgx.PgError); ok {
 			if pgerr.ConstraintName == "threads_slug_key" {
@@ -46,43 +50,31 @@ func (thread *Threads) CreateThread(pool *pgx.ConnPool) error {
 		}
 		return err
 	}
-	_, err = tx.Exec("UPDATE forums SET threads=threads+1 WHERE slug=$1", thread.Forum)
-	if err != nil {
-		return err
-	}
+
+	//waitData.Wait() //почему здесь нк работает?
 
 	err = tx.Commit()
 	if err != nil {
 		return err
 	}
 
+	AddMember(pool, thread.Forum, thread.Author)
+
 	thread.TID = id
+
 	return nil
 }
 
-func (thread *Threads) GetThreadBySlug(pool *pgx.ConnPool) (Threads, error) {
-	resultThread := Threads{}
-	err := pool.QueryRow(`SELECT "tID", author, created, forum, message, title, votes, slug FROM threads WHERE slug = $1`,
-		thread.Slug).Scan(&resultThread.TID, &resultThread.Author, &resultThread.Created, &resultThread.Forum,
-		&resultThread.Message, &resultThread.Title, &resultThread.Votes, &resultThread.Slug)
-
-	if err != nil {
-		return resultThread, err
-	}
-	return resultThread, nil
+func (thread *Threads) GetThreadBySlug(pool *pgx.ConnPool) error {
+	return pool.QueryRow(`SELECT "tID", author, created, forum, message, title, votes, slug FROM threads WHERE slug = $1`,
+		thread.Slug).Scan(&thread.TID, &thread.Author, &thread.Created, &thread.Forum,
+		&thread.Message, &thread.Title, &thread.Votes, &thread.Slug)
 }
 
-func (thread *Threads) GetThreadById(pool *pgx.ConnPool) (Threads, error) {
-	resultThread := Threads{}
-	resultThread.TID = thread.TID
-	err := pool.QueryRow(`SELECT author, created, forum, message, slug, title, votes FROM threads WHERE "tID" = $1`,
-		thread.TID).Scan(&resultThread.Author, &resultThread.Created, &resultThread.Forum,
-		&resultThread.Message, &resultThread.Slug, &resultThread.Title, &resultThread.Votes)
-
-	if err != nil {
-		return resultThread, err
-	}
-	return resultThread, nil
+func (thread *Threads) GetThreadById(pool *pgx.ConnPool) error {
+	return pool.QueryRow(`SELECT author, created, forum, message, slug, title, votes FROM threads WHERE "tID" = $1`,
+		thread.TID).Scan(&thread.Author, &thread.Created, &thread.Forum,
+		&thread.Message, &thread.Slug, &thread.Title, &thread.Votes)
 }
 
 func (thread *Threads) GetPostsWithFlatSort(pool *pgx.ConnPool, limit, since, desc string) ([]Posts, error) {
@@ -163,13 +155,8 @@ func (thread *Threads) GetPostsWithTreeSort(pool *pgx.ConnPool, limit, since, de
 	return resultPosts, nil
 }
 
-//SELECT * FROM posts WHERE thread = 119 AND path[1] in (SELECT "pID" FROM posts
-//WHERE thread = 119 AND parent = 0 LIMIT 3
-//) ORDER BY path ASC;
-
-//SELECT * FROM posts WHERE thread = 119 AND path[1] in (SELECT "pID" FROM posts
-//WHERE thread = 119 AND parent = 0 ORDER BY path DESC LIMIT 3 //поч desc
-//) AND path > (SELECT path FROM posts WHERE "pID" = 2038) ORDER BY path ASC;
+//SELECT "pID", author, created, forum, message, thread, parent FROM posts WHERE thread = 119 AND path[1] in (SELECT "pID" FROM posts
+//WHERE thread = 119 AND parent = 0 AND path > (SELECT path FROM posts WHERE "pID" = 2038) ORDER BY path ASC  LIMIT 3) ORDER BY path ASC
 func (thread *Threads) GetPostsWithParentTreeSort(pool *pgx.ConnPool, limit, since, desc string) ([]Posts, error) {
 	queryRow := `SELECT "pID", author, created, forum, message, thread, parent FROM posts WHERE thread = $1 AND path[1] in (SELECT "pID" FROM posts
 	WHERE thread = $1 AND parent = 0 `
@@ -177,25 +164,15 @@ func (thread *Threads) GetPostsWithParentTreeSort(pool *pgx.ConnPool, limit, sin
 	var params []interface{}
 	params = append(params, thread.TID)
 
-	if since == "" { //почему так?
-		if desc == "true" {
-			queryRow += ` ORDER BY path DESC`
-		} else {
-			queryRow += ` ORDER BY path ASC`
-		}
-	} else {
-		if desc != "true" {
-			queryRow += ` ORDER BY path DESC`
-		} else {
-			queryRow += ` ORDER BY path ASC`
-		}
-	}
+	//if since == "" { //почему так?
+	//} else {
+	//	if desc != "true" {
+	//		queryRow += ` ORDER BY path DESC`
+	//	} else {
+	//		queryRow += ` ORDER BY path ASC`
+	//	}
+	//}
 
-	if limit != "" {
-		queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
-		params = append(params, limit)
-	}
-	queryRow += `)`
 	if since != "" {
 		if desc == "true" {
 			queryRow += ` AND path < (SELECT path FROM posts WHERE "pID" = $` + strconv.Itoa(len(params)+1) + `)`
@@ -209,13 +186,24 @@ func (thread *Threads) GetPostsWithParentTreeSort(pool *pgx.ConnPool, limit, sin
 	} else {
 		queryRow += ` ORDER BY path ASC`
 	}
+	if limit != "" {
+		queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
+		params = append(params, limit)
+	}
+	queryRow += `)`
+
+	if desc == "true" {
+		queryRow += ` ORDER BY path DESC`
+	} else {
+		queryRow += ` ORDER BY path ASC`
+	}
 	//if limit != "" {
 	//	queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
 	//	params = append(params, limit)
 	//}
-	log.Print(queryRow)
 	rows, err := pool.Query(queryRow, params...)
 	if err != nil {
+
 		return nil, err
 	}
 
@@ -238,4 +226,10 @@ func (thread *Threads) UpdateThread(pool *pgx.ConnPool) error {
 		return err
 	}
 	return nil
+}
+
+func ThreadsCount(pool *pgx.ConnPool) (int32, error) {
+	var count int32
+	err := pool.QueryRow("SELECT COUNT(*) FROM threads").Scan(&count)
+	return count, err
 }

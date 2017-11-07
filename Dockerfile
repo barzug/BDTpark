@@ -1,4 +1,4 @@
-FROM ubuntu:17.04
+FROM ubuntu:16.04
 
 MAINTAINER Sergey Barsukov
 
@@ -9,18 +9,29 @@ RUN apt-get -y update
 # Установка postgresql
 #
 ENV PGVER 9.6
+
+RUN apt-get install -y wget
+
+RUN echo deb http://apt.postgresql.org/pub/repos/apt/ xenial-pgdg main > /etc/apt/sources.list.d/pgdg.list
+
+RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | \
+         apt-key add -
+
+RUN apt-get -y update
+
+
+
 RUN apt-get install -y postgresql-$PGVER
 
-# Run the rest of the commands as the ``postgres``
-# user created by the ``postgres-$PGVER`` package
-# when it was ``apt-get installed``
+# Run the rest of the commands as the ``postgres`` user created by the ``postgres-$PGVER`` package when it was ``apt-get installed``
 USER postgres
 
 # Create a PostgreSQL role named ``docker`` with ``docker`` as the password and
-# then create a database `docker` owned by the ``docker`` role.
+# then create a database `postgres` owned by the ``docker`` role.
 RUN /etc/init.d/postgresql start &&\
-    psql --command "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
-    createdb -O docker docker &&\
+    psql -c "CREATE USER docker WITH SUPERUSER PASSWORD 'docker';" &&\
+    psql -c "GRANT ALL ON DATABASE postgres TO docker;" &&\
+    psql -d postgres -c "CREATE EXTENSION IF NOT EXISTS citext;" &&\
     /etc/init.d/postgresql stop
 
 # Adjust PostgreSQL configuration so that remote connections to the
@@ -45,26 +56,27 @@ USER root
 #
 
 # Установка golang
-RUN apt-get install -y wget git && \
-    wget https://storage.googleapis.com/golang/go1.9.1.linux-amd64.tar.gz
+RUN wget https://storage.googleapis.com/golang/go1.8.linux-amd64.tar.gz
+RUN tar -C /usr/local -xzf go1.8.linux-amd64.tar.gz
+RUN apt-get install -y git
 
-RUN tar -C /usr/local -xzf go1.9.1.linux-amd64.tar.gz && \
-    mkdir go && mkdir go/src && mkdir go/bin && mkdir go/pkg
 
 # Выставляем переменную окружения для сборки проекта
-ENV GOPATH $HOME/go
+ENV GOPATH /opt/go
+#ENV GOROOT /usr/local/go
+ENV PATH $PATH:/usr/local/go/bin
 
-ENV PATH $GOPATH/bin:/usr/local/go/bin:$PATH
 
-
-# Добавляем зависимости генератора
+#Устанавливаем требуемые пакеты
 RUN go get -v github.com/jackc/pgx
 RUN go get -v github.com/qiangxue/fasthttp-routing
 RUN go get -v github.com/valyala/fasthttp
 RUN go get -v github.com/fasthttp-contrib/render
 
-EXPOSE 8000
+
+ADD / /
+
+EXPOSE 5000
 
 USER postgres
-CMD ["/usr/lib/postgresql/9.6/bin/postgres", "-D", "/var/lib/postgresql/9.6/main", "-c", "config_file=/etc/postgresql/9.6/main/postgresql.conf"]
-# CMD service postgresql start
+CMD service postgresql start && go run main.go

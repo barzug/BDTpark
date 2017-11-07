@@ -3,8 +3,9 @@ package models
 import (
 	"github.com/jackc/pgx"
 
-	"../../utils"
 	"strconv"
+
+	"../../utils"
 )
 
 type Forums struct {
@@ -23,7 +24,7 @@ func (forum *Forums) CreateForum(pool *pgx.ConnPool) error {
 		forum.Slug, forum.Title, forum.Author).Scan(&id)
 	if err != nil {
 		if pgerr, ok := err.(pgx.PgError); ok {
-			if pgerr.ConstraintName == "forums_slug_key" {
+			if pgerr.ConstraintName == "index_on_forums_slug" {
 				return utils.UniqueError
 			} else {
 				return err
@@ -52,9 +53,9 @@ func (forum *Forums) GetAllThreads(pool *pgx.ConnPool, limit, since, desc string
 	params = append(params, forum.Slug)
 	if since != "" {
 		if desc == "true" {
-			queryRow += ` AND created <= $` + strconv.Itoa(len(params) + 1)
+			queryRow += ` AND created <= $` + strconv.Itoa(len(params)+1)
 		} else {
-			queryRow += ` AND created >= $` + strconv.Itoa(len(params) + 1)
+			queryRow += ` AND created >= $` + strconv.Itoa(len(params)+1)
 		}
 		params = append(params, since)
 	}
@@ -64,20 +65,16 @@ func (forum *Forums) GetAllThreads(pool *pgx.ConnPool, limit, since, desc string
 		queryRow += ` ORDER BY created ASC`
 	}
 	if limit != "" {
-		queryRow += ` LIMIT $` + strconv.Itoa(len(params) + 1)
+		queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
 		params = append(params, limit)
 	}
-
-
 
 	rows, err := pool.Query(queryRow, params...)
 	if err != nil {
 		return nil, err
 	}
 
-
 	resultThreads := []Threads{}
-
 
 	currentThreadInRows := Threads{}
 	for rows.Next() {
@@ -88,47 +85,47 @@ func (forum *Forums) GetAllThreads(pool *pgx.ConnPool, limit, since, desc string
 	return resultThreads, nil
 }
 
+func (forum *Forums) GetMembers(pool *pgx.ConnPool, limit, since, desc string) ([]Users, error) {
+	queryRow := `SELECT u.about, u.email, u.fullname, u.nickname FROM members AS m
+ 	JOIN users as u ON u.nickname = m.author AND m.forum = $1`
 
-//func (forum *Forums) GetUsers(pool *pgx.ConnPool, limit, since, desc string) ([]Users, error) {
-//	queryRow := `SELECT u.nickname, u.email, u.fullname, u.about FROM users AS u WHERE u.nickname IN (
-//	 SELECT f.author `
-//
-//	var params []interface{}
-//	params = append(params, user.Nickname)
-//	if since != "" {
-//		//if desc == "true" {
-//		queryRow += ` AND nickname < $` + strconv.Itoa(len(params) + 1)
-//		//} else {
-//		//	queryRow += ` AND nickname > $` + strconv.Itoa(len(params) + 1)
-//		//}
-//		params = append(params, since)
-//	}
-//	if desc == "true" {
-//		queryRow += ` ORDER BY u.nickname DESC`
-//	} else {
-//		queryRow += ` ORDER BY u.nickname ASC`
-//	}
-//	if limit != "" {
-//		queryRow += ` LIMIT $` + strconv.Itoa(len(params) + 1)
-//		params = append(params, limit)
-//	}
-//
-//
-//
-//	rows, err := pool.Query(queryRow, params...)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//
-//	resultUsers := []Users{}
-//
-//
-//	currentUserInRows := Users{}
-//	for rows.Next() {
-//		rows.Scan(&currentUserInRows.Nickname, &currentUserInRows.Email, &currentUserInRows.Fullname, &currentUserInRows.About)
-//		resultUsers = append(resultUsers, currentUserInRows)
-//	}
-//	return resultUsers, nil
-//}
-//
+	var params []interface{}
+	params = append(params, forum.Slug)
+	if since != "" {
+		if desc == "true" {
+			queryRow += ` AND u.nickname < $` + strconv.Itoa(len(params)+1)
+		} else {
+			queryRow += ` AND u.nickname > $` + strconv.Itoa(len(params)+1)
+		}
+		params = append(params, since)
+	}
+	if desc == "true" {
+		queryRow += ` ORDER BY u.nickname DESC`
+	} else {
+		queryRow += ` ORDER BY u.nickname ASC`
+	}
+	if limit != "" {
+		queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
+		params = append(params, limit)
+	}
+
+	rows, err := pool.Query(queryRow, params...)
+	if err != nil {
+		return nil, err
+	}
+
+	resultUsers := []Users{}
+
+	currentUserInRows := Users{}
+	for rows.Next() {
+		rows.Scan(&currentUserInRows.About, &currentUserInRows.Email, &currentUserInRows.Fullname, &currentUserInRows.Nickname)
+		resultUsers = append(resultUsers, currentUserInRows)
+	}
+	return resultUsers, nil
+}
+
+func ForumsCount(pool *pgx.ConnPool) (int32, error) {
+	var count int32
+	err := pool.QueryRow("SELECT COUNT(*) FROM forums").Scan(&count)
+	return count, err
+}

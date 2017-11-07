@@ -8,7 +8,6 @@ import (
 )
 
 type Users struct {
-	//UID      int64
 	Email    string `json:"email"`
 	Nickname string `json:"nickname"`
 	Fullname string `json:"fullname"`
@@ -22,7 +21,7 @@ func (user *Users) CreateUser(pool *pgx.ConnPool) error {
 		user.Nickname, user.Email, user.Fullname, user.About).Scan(&id)
 	if err != nil {
 		if pgerr, ok := err.(pgx.PgError); ok {
-			if pgerr.ConstraintName == "users_nickname_key" || pgerr.ConstraintName == "users_email_key"  {
+			if pgerr.ConstraintName == "index_on_users_nickname" || pgerr.ConstraintName == "index_on_users_email"  {
 				return utils.UniqueError
 			} else {
 				return err
@@ -81,7 +80,7 @@ func (user *Users) UpdateUser(pool *pgx.ConnPool) error {
 		user.Email, user.Fullname, user.About, user.Nickname).Scan(&id)
 	if err != nil {
 		if pgerr, ok := err.(pgx.PgError); ok {
-			if pgerr.ConstraintName == "users_email_key"  {
+			if pgerr.ConstraintName == "index_on_users_email"  {
 				return utils.UniqueError
 			} else {
 				return err
@@ -92,3 +91,8 @@ func (user *Users) UpdateUser(pool *pgx.ConnPool) error {
 	return nil
 }
 
+func UsersCount(pool *pgx.ConnPool) (int32, error) {
+	var count int32
+	err := pool.QueryRow("SELECT COUNT(*) FROM users").Scan(&count)
+	return count, err
+}
