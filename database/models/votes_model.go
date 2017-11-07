@@ -2,6 +2,8 @@ package models
 
 import (
 	"github.com/jackc/pgx"
+	"strconv"
+	"log"
 )
 
 type Votes struct {
@@ -10,30 +12,48 @@ type Votes struct {
 	Thread int64  `json:"thread"`
 }
 
-func (vote *Votes) VoteForThreadAndReturningVotes(pool *pgx.ConnPool, votesThread int32) (int32, error) {
-	//pool.QueryRow(`INSERT INTO votes ("user", thread, voice) VALUES ($1, $2, $3)
-	// ON CONFLICT ("user", thread) DO UPDATE SET voice = $3 RETURNING voice`,
-	//	vote.User, vote.Thread, vote.Voice).Scan(&vote.Voice)
-	//
+func (vote *Votes) VoteForThreadAndReturningVotes(pool *pgx.ConnPool, slugOrId string) (Threads, error) {
 	var prevVote int32
 
-	//
-	//pool.QueryRow(`UPDATE threads SET votes = (SELECT SUM(voice) AS voiceSum FROM votes WHERE thread = $1) WHERE "tID" = $1 RETURNING votes`, vote.Thread).Scan(&votesNumber)
+	thread := Threads{}
 
 	err := pool.QueryRow(`SELECT voice FROM votes WHERE "user" = $1 AND thread = $2`,
 		vote.User, vote.Thread).Scan(&prevVote)
 
+	tx, err := pool.Begin()
 	if err != nil {
-		pool.Exec(`INSERT INTO votes ("user", thread, voice) VALUES ($1, $2, $3)`,
+		return thread, err
+	}
+	defer tx.Rollback()
+
+	if err != nil {
+		tx.Exec(`INSERT INTO votes ("user", thread, voice) VALUES ($1, $2, $3)`,
 			vote.User, vote.Thread, vote.Voice)
-		votesThread += vote.Voice
 	} else {
-		pool.Exec(`UPDATE votes SET voice = $1 WHERE "user" = $2 AND thread = $3`,
+		tx.Exec(`UPDATE votes SET voice = $1 WHERE "user" = $2 AND thread = $3`,
 			vote.Voice, vote.User, vote.Thread)
-		votesThread += vote.Voice - prevVote
+		vote.Voice -= prevVote
 	}
 
-	pool.Exec(`UPDATE threads SET votes = $1 WHERE "tID" = $2`, votesThread, vote.Thread)
+	log.Print(vote.Voice)
+	log.Print(slugOrId)
 
-	return votesThread, nil
+	if id, parseErr := strconv.ParseInt(slugOrId, 10, 64); parseErr == nil {
+		thread.TID = id
+		tx.QueryRow(`UPDATE threads SET votes = votes + $1 WHERE "tID" = $2 RETURNING "tID", author, created, forum, message, title, votes, slug`,
+			vote.Voice, thread.TID).Scan(&thread.TID, &thread.Author, &thread.Created, &thread.Forum,
+			&thread.Message, &thread.Title, &thread.Votes, &thread.Slug)
+	} else {
+		thread.Slug = slugOrId
+		tx.QueryRow(`UPDATE threads SET votes = votes + $1 WHERE slug = $2 RETURNING "tID", author, created, forum, message, title, votes, slug`,
+			vote.Voice, thread.Slug).Scan(&thread.TID, &thread.Author, &thread.Created, &thread.Forum,
+			&thread.Message, &thread.Title, &thread.Votes, &thread.Slug)
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		return thread, err
+	}
+
+	return thread, nil
 }
