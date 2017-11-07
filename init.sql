@@ -91,6 +91,7 @@ CREATE UNIQUE INDEX  index_on_threads_tID
   ON threads ("tID");
 
 
+
 CREATE TABLE "votes" (
   "voice"  INT2,
   "user"   CITEXT NOT NULL,

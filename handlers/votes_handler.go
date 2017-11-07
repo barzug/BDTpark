@@ -8,8 +8,6 @@ import (
 	"github.com/valyala/fasthttp"
 	"strconv"
 	"sync"
-	"log"
-
 	"encoding/json"
 )
 
@@ -35,19 +33,14 @@ func VoteForThread(c *routing.Context) error {
 
 	}(waitData)
 
-
 	var err, errGetUser error
 	var userNickname string
-
 
 	vote := models.Votes{}
 	waitData.Add(1)
 	go func(waitData *sync.WaitGroup) {
 		defer waitData.Done()
 		err = json.Unmarshal(c.PostBody(), &vote);
-		log.Print(err)
-		log.Print(vote)
-
 
 		user := models.Users{}
 		user.Nickname = vote.User

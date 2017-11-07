@@ -33,9 +33,8 @@ func (thread *Threads) CreateThread(pool *pgx.ConnPool) error {
 
 	//go func(waitData *sync.WaitGroup) {
 	//	defer waitData.Done()
-		tx.Exec("UPDATE forums SET threads=threads+1 WHERE slug=$1", thread.Forum)
+	tx.Exec("UPDATE forums SET threads=threads+1 WHERE slug=$1", thread.Forum)
 	//}(waitData)
-
 
 	err = tx.QueryRow(`INSERT INTO threads (author, created, message, slug, title, forum)`+
 		`VALUES ($1, $2, $3, $4, $5, $6) RETURNING "tID", created;`,
@@ -69,6 +68,7 @@ func (thread *Threads) GetThreadBySlug(pool *pgx.ConnPool) error {
 	return pool.QueryRow(`SELECT "tID", author, created, forum, message, title, votes, slug FROM threads WHERE slug = $1`,
 		thread.Slug).Scan(&thread.TID, &thread.Author, &thread.Created, &thread.Forum,
 		&thread.Message, &thread.Title, &thread.Votes, &thread.Slug)
+
 }
 
 func (thread *Threads) GetThreadById(pool *pgx.ConnPool) error {

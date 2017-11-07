@@ -39,6 +39,7 @@ func CreatePosts(c *routing.Context) error {
 
 	if err := models.CreatePostsBySlice(daemon.DB.Pool, posts, thread.TID, created, thread.Forum); err != nil {
 		if err == utils.NotFoundError {
+
 			daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
 			return nil
 		}
@@ -103,6 +104,7 @@ func GetPost(c *routing.Context) error {
 
 				err = thread.GetThreadById(daemon.DB.Pool)
 				response.Thread = thread
+
 			}
 			if err != nil {
 				daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
