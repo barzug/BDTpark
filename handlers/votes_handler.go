@@ -63,7 +63,7 @@ func VoteForThread(c *routing.Context) error {
 	vote.Thread = thread.TID
 	vote.User = userNickname
 
-	thread.Votes, err = vote.VoteForThreadAndReturningVotes(daemon.DB.Pool);
+	thread.Votes, err = vote.VoteForThreadAndReturningVotes(daemon.DB.Pool, thread.Votes);
 	if err != nil {
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
 		return nil
