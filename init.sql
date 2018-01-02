@@ -1,4 +1,3 @@
-
 DROP TABLE IF EXISTS "forums";
 
 DROP TABLE IF EXISTS "users";
@@ -66,6 +65,21 @@ CREATE TABLE "posts" (
 OIDS = FALSE
 );
 
+DROP INDEX IF EXISTS index_on_posts_thread;
+
+CREATE INDEX index_on_posts_thread
+  ON posts (thread);
+
+DROP INDEX IF EXISTS index_on_posts_parent;
+
+CREATE INDEX index_on_posts_parent
+  ON posts (parent);
+
+DROP INDEX IF EXISTS index_on_posts_path;
+
+CREATE INDEX index_on_posts_path
+  ON posts USING GIN (path);
+
 
 CREATE TABLE "threads" (
   "tID"     SERIAL NOT NULL,
@@ -85,21 +99,31 @@ DROP INDEX IF EXISTS threads_slug_key;
 
 CREATE UNIQUE INDEX threads_slug_key ON threads (slug) WHERE slug != '';
 
+DROP INDEX IF EXISTS threads_forum_key;
+
+CREATE INDEX threads_forum_key ON threads (forum);
+
 
 CREATE TABLE "votes" (
   "voice"  INT2,
-  "user"   CITEXT NOT NULL,
-  "thread" BIGINT NOT NULL,
-  UNIQUE ("user", "thread")
+  "user"   CITEXT,
+  "thread" BIGINT
 ) WITH (
 OIDS = FALSE
 );
 
+DROP INDEX IF EXISTS index_on_votes_user_and_thread;
+
+CREATE UNIQUE INDEX index_on_votes_user_and_thread ON votes (thread, "user");
+
 
 CREATE TABLE IF NOT EXISTS "members" (
   forum  CITEXT,
-  author CITEXT,
-UNIQUE ("forum", "author")
+  author CITEXT
 ) WITH (
   OIDS = FALSE
 );
+
+DROP INDEX IF EXISTS index_on_members_forum_and_author;
+
+CREATE UNIQUE INDEX index_on_members_forum_and_author ON members (forum, author);
