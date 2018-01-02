@@ -85,11 +85,6 @@ DROP INDEX IF EXISTS threads_slug_key;
 
 CREATE UNIQUE INDEX threads_slug_key ON threads (slug) WHERE slug != '';
 
-DROP INDEX IF EXISTS index_on_threads_tID;
-
-CREATE UNIQUE INDEX  index_on_threads_tID
-  ON threads ("tID");
-
 
 CREATE TABLE "votes" (
   "voice"  INT2,
@@ -103,7 +98,7 @@ OIDS = FALSE
 
 CREATE TABLE IF NOT EXISTS "members" (
   forum  CITEXT,
-author CITEXT,
+  author CITEXT,
 UNIQUE ("forum", "author")
 ) WITH (
   OIDS = FALSE
