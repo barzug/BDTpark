@@ -1,6 +1,8 @@
 package models
 
 import (
+	"bytes"
+
 	"github.com/jackc/pgx"
 
 	"strconv"
@@ -47,29 +49,33 @@ func (forum *Forums) GetForumBySlug(pool *pgx.ConnPool) (Forums, error) {
 }
 
 func (forum *Forums) GetAllThreads(pool *pgx.ConnPool, limit, since, desc string) ([]Threads, error) {
-	queryRow := `SELECT "tID", author, created, forum, message, slug, title, votes FROM threads WHERE forum = $1`
+	queryRow := bytes.Buffer{}
+	queryRow.WriteString(`SELECT "tID", author, created, forum, message, slug, title, votes FROM threads WHERE forum = $1`)
 
 	var params []interface{}
 	params = append(params, forum.Slug)
 	if since != "" {
 		if desc == "true" {
-			queryRow += ` AND created <= $` + strconv.Itoa(len(params)+1)
+			queryRow.WriteString(` AND created <= $`)
+			queryRow.WriteString(strconv.Itoa(len(params) + 1))
 		} else {
-			queryRow += ` AND created >= $` + strconv.Itoa(len(params)+1)
+			queryRow.WriteString(` AND created >= $`)
+			queryRow.WriteString(strconv.Itoa(len(params) + 1))
 		}
 		params = append(params, since)
 	}
 	if desc == "true" {
-		queryRow += ` ORDER BY created DESC`
+		queryRow.WriteString(` ORDER BY created DESC`)
 	} else {
-		queryRow += ` ORDER BY created ASC`
+		queryRow.WriteString(` ORDER BY created ASC`)
 	}
 	if limit != "" {
-		queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
+		queryRow.WriteString(` LIMIT $`)
+		queryRow.WriteString(strconv.Itoa(len(params) + 1))
 		params = append(params, limit)
 	}
 
-	rows, err := pool.Query(queryRow, params...)
+	rows, err := pool.Query(queryRow.String(), params...)
 	if err != nil {
 		return nil, err
 	}
@@ -86,30 +92,34 @@ func (forum *Forums) GetAllThreads(pool *pgx.ConnPool, limit, since, desc string
 }
 
 func (forum *Forums) GetMembers(pool *pgx.ConnPool, limit, since, desc string) ([]Users, error) {
-	queryRow := `SELECT u.about, u.email, u.fullname, u.nickname FROM members AS m
- 	JOIN users as u ON u.nickname = m.author AND m.forum = $1`
+	queryRow := bytes.Buffer{}
+	queryRow.WriteString(`SELECT u.about, u.email, u.fullname, u.nickname FROM members AS m
+ 	JOIN users as u ON u.nickname = m.author AND m.forum = $1`)
 
 	var params []interface{}
 	params = append(params, forum.Slug)
 	if since != "" {
 		if desc == "true" {
-			queryRow += ` AND u.nickname < $` + strconv.Itoa(len(params)+1)
+			queryRow.WriteString(` AND u.nickname < $`)
+			queryRow.WriteString(strconv.Itoa(len(params) + 1))
 		} else {
-			queryRow += ` AND u.nickname > $` + strconv.Itoa(len(params)+1)
+			queryRow.WriteString(` AND u.nickname > $`)
+			queryRow.WriteString(strconv.Itoa(len(params) + 1))
 		}
 		params = append(params, since)
 	}
 	if desc == "true" {
-		queryRow += ` ORDER BY u.nickname DESC`
+		queryRow.WriteString(` ORDER BY u.nickname DESC`)
 	} else {
-		queryRow += ` ORDER BY u.nickname ASC`
+		queryRow.WriteString(` ORDER BY u.nickname ASC`)
 	}
 	if limit != "" {
-		queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
+		queryRow.WriteString(` LIMIT $`)
+		queryRow.WriteString(strconv.Itoa(len(params) + 1))
 		params = append(params, limit)
 	}
 
-	rows, err := pool.Query(queryRow, params...)
+	rows, err := pool.Query(queryRow.String(), params...)
 	if err != nil {
 		return nil, err
 	}

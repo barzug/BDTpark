@@ -1,6 +1,7 @@
 package models
 
 import (
+	"bytes"
 	"strconv"
 	"time"
 
@@ -78,29 +79,33 @@ func (thread *Threads) GetThreadById(pool *pgx.ConnPool) error {
 }
 
 func (thread *Threads) GetPostsWithFlatSort(pool *pgx.ConnPool, limit, since, desc string) ([]Posts, error) {
-	queryRow := `SELECT "pID", author, created, forum, message, thread, parent FROM posts WHERE thread = $1`
+	queryRow := bytes.Buffer{}
+	queryRow.WriteString(`SELECT "pID", author, created, forum, message, thread, parent FROM posts WHERE thread = $1`)
 
 	var params []interface{}
 	params = append(params, thread.TID)
 	if since != "" {
 		if desc == "true" {
-			queryRow += ` AND "pID" < $` + strconv.Itoa(len(params)+1)
+			queryRow.WriteString(` AND "pID" < $`)
+			queryRow.WriteString(strconv.Itoa(len(params) + 1))
 		} else {
-			queryRow += ` AND "pID" > $` + strconv.Itoa(len(params)+1)
+			queryRow.WriteString(` AND "pID" > $`)
+			queryRow.WriteString(strconv.Itoa(len(params) + 1))
 		}
 		params = append(params, since)
 	}
 	if desc == "true" {
-		queryRow += ` ORDER BY "pID" DESC`
+		queryRow.WriteString(` ORDER BY "pID" DESC`)
 	} else {
-		queryRow += ` ORDER BY "pID" ASC`
+		queryRow.WriteString(` ORDER BY "pID" ASC`)
 	}
 	if limit != "" {
-		queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
+		queryRow.WriteString(` LIMIT $`)
+		queryRow.WriteString(strconv.Itoa(len(params) + 1))
 		params = append(params, limit)
 	}
 
-	rows, err := pool.Query(queryRow, params...)
+	rows, err := pool.Query(queryRow.String(), params...)
 	if err != nil {
 		return nil, err
 	}
@@ -117,29 +122,35 @@ func (thread *Threads) GetPostsWithFlatSort(pool *pgx.ConnPool, limit, since, de
 }
 
 func (thread *Threads) GetPostsWithTreeSort(pool *pgx.ConnPool, limit, since, desc string) ([]Posts, error) {
-	queryRow := `SELECT "pID", author, created, forum, message, thread, parent FROM posts WHERE thread = $1`
+	queryRow := bytes.Buffer{}
+	queryRow.WriteString(`SELECT "pID", author, created, forum, message, thread, parent FROM posts WHERE thread = $1`)
 
 	var params []interface{}
 	params = append(params, thread.TID)
 	if since != "" {
 		if desc == "true" {
-			queryRow += ` AND path < (SELECT path FROM posts WHERE "pID" = $` + strconv.Itoa(len(params)+1) + `)`
+			queryRow.WriteString(` AND path < (SELECT path FROM posts WHERE "pID" = $`)
+			queryRow.WriteString(strconv.Itoa(len(params) + 1))
+			queryRow.WriteString(`)`)
 		} else {
-			queryRow += ` AND path > (SELECT path FROM posts WHERE "pID" = $` + strconv.Itoa(len(params)+1) + `)`
+			queryRow.WriteString(` AND path > (SELECT path FROM posts WHERE "pID" = $`)
+			queryRow.WriteString(strconv.Itoa(len(params) + 1))
+			queryRow.WriteString(`)`)
 		}
 		params = append(params, since)
 	}
 	if desc == "true" {
-		queryRow += ` ORDER BY path DESC`
+		queryRow.WriteString(` ORDER BY path DESC`)
 	} else {
-		queryRow += ` ORDER BY path ASC`
+		queryRow.WriteString(` ORDER BY path ASC`)
 	}
 	if limit != "" {
-		queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
+		queryRow.WriteString(` LIMIT $`)
+		queryRow.WriteString(strconv.Itoa(len(params) + 1))
 		params = append(params, limit)
 	}
 
-	rows, err := pool.Query(queryRow, params...)
+	rows, err := pool.Query(queryRow.String(), params...)
 	if err != nil {
 		return nil, err
 	}
@@ -158,50 +169,44 @@ func (thread *Threads) GetPostsWithTreeSort(pool *pgx.ConnPool, limit, since, de
 //SELECT "pID", author, created, forum, message, thread, parent FROM posts WHERE thread = 119 AND path[1] in (SELECT "pID" FROM posts
 //WHERE thread = 119 AND parent = 0 AND path > (SELECT path FROM posts WHERE "pID" = 2038) ORDER BY path ASC  LIMIT 3) ORDER BY path ASC
 func (thread *Threads) GetPostsWithParentTreeSort(pool *pgx.ConnPool, limit, since, desc string) ([]Posts, error) {
-	queryRow := `SELECT "pID", author, created, forum, message, thread, parent FROM posts WHERE thread = $1 AND path[1] in (SELECT "pID" FROM posts
-	WHERE thread = $1 AND parent = 0 `
+	queryRow := bytes.Buffer{}
+	queryRow.WriteString(`SELECT "pID", author, created, forum, message, thread, parent FROM posts WHERE thread = $1 AND path[1] in (SELECT "pID" FROM posts
+	WHERE thread = $1 AND parent = 0 `)
 
 	var params []interface{}
 	params = append(params, thread.TID)
 
-	//if since == "" { //почему так?
-	//} else {
-	//	if desc != "true" {
-	//		queryRow += ` ORDER BY path DESC`
-	//	} else {
-	//		queryRow += ` ORDER BY path ASC`
-	//	}
-	//}
-
 	if since != "" {
 		if desc == "true" {
-			queryRow += ` AND path < (SELECT path FROM posts WHERE "pID" = $` + strconv.Itoa(len(params)+1) + `)`
+			queryRow.WriteString(` AND path < (SELECT path FROM posts WHERE "pID" = $`)
+			queryRow.WriteString(strconv.Itoa(len(params) + 1))
+			queryRow.WriteString(`)`)
 		} else {
-			queryRow += ` AND path > (SELECT path FROM posts WHERE "pID" = $` + strconv.Itoa(len(params)+1) + `)`
+			queryRow.WriteString(` AND path > (SELECT path FROM posts WHERE "pID" = $`)
+			queryRow.WriteString(strconv.Itoa(len(params) + 1))
+			queryRow.WriteString(`)`)
 		}
 		params = append(params, since)
 	}
 	if desc == "true" {
-		queryRow += ` ORDER BY path DESC`
+		queryRow.WriteString(` ORDER BY path DESC`)
 	} else {
-		queryRow += ` ORDER BY path ASC`
+		queryRow.WriteString(` ORDER BY path ASC`)
 	}
 	if limit != "" {
-		queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
+		queryRow.WriteString(` LIMIT $`)
+		queryRow.WriteString(strconv.Itoa(len(params) + 1))
 		params = append(params, limit)
 	}
-	queryRow += `)`
+	queryRow.WriteString(`)`)
 
 	if desc == "true" {
-		queryRow += ` ORDER BY path DESC`
+		queryRow.WriteString(` ORDER BY path DESC`)
 	} else {
-		queryRow += ` ORDER BY path ASC`
+		queryRow.WriteString(` ORDER BY path ASC`)
 	}
-	//if limit != "" {
-	//	queryRow += ` LIMIT $` + strconv.Itoa(len(params)+1)
-	//	params = append(params, limit)
-	//}
-	rows, err := pool.Query(queryRow, params...)
+
+	rows, err := pool.Query(queryRow.String(), params...)
 	if err != nil {
 
 		return nil, err
