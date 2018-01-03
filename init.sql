@@ -83,7 +83,7 @@ CREATE INDEX index_on_posts_parent
 DROP INDEX IF EXISTS index_on_posts_path;
 
 CREATE INDEX index_on_posts_path
-  ON posts USING GIN (path);
+  ON posts (path);
 
 DROP INDEX IF EXISTS index_on_posts_id_and_thread;
 
