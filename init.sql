@@ -80,20 +80,30 @@ DROP INDEX IF EXISTS index_on_posts_parent;
 CREATE INDEX index_on_posts_parent
   ON posts (parent);
 
--- DROP INDEX IF EXISTS index_on_posts_path;
+DROP INDEX IF EXISTS index_on_posts_path;
 
--- CREATE INDEX index_on_posts_path
---   ON posts (path);
+CREATE INDEX index_on_posts_path
+  ON posts USING GIN (path);
 
--- DROP INDEX IF EXISTS index_on_posts_id_and_path_and_thread;
+DROP INDEX IF EXISTS index_on_posts_id_and_thread;
 
--- CREATE INDEX index_on_posts_id_and_path_and_thread
---   ON posts ("pID", thread, path);
+CREATE INDEX index_on_posts_id_and_thread
+  ON posts ("pID", thread);
 
--- DROP INDEX IF EXISTS index_on_posts_id_and_path;
+DROP INDEX IF EXISTS index_on_posts_path_and_thread;
 
--- CREATE INDEX index_on_posts_id_and_path
---   ON posts ("pID", path);
+CREATE INDEX index_on_posts_path_and_thread
+  ON posts (thread, path);
+
+DROP INDEX IF EXISTS index_on_posts_id_and_path_and_thread_and_parent;
+
+CREATE INDEX index_on_posts_id_and_path_and_thread_and_parent
+  ON posts ("pID", thread, parent, path);
+
+DROP INDEX IF EXISTS index_on_posts_id_and_path;
+
+CREATE INDEX index_on_posts_id_and_path
+  ON posts ("pID", path);
 
 
 CREATE TABLE "threads" (
@@ -118,9 +128,9 @@ DROP INDEX IF EXISTS index_on_threads_forum;
 
 CREATE INDEX index_on_threads_forum ON threads (forum);
 
--- DROP INDEX IF EXISTS index_on_threads_created;
+DROP INDEX IF EXISTS index_on_threads_created;
 
--- CREATE INDEX index_on_threads_created ON threads (created);
+CREATE INDEX index_on_threads_created ON threads (created);
 
 
 CREATE TABLE "votes" (
