@@ -80,6 +80,12 @@ DROP INDEX IF EXISTS index_on_posts_path;
 CREATE INDEX index_on_posts_path
   ON posts (path);
 
+DROP INDEX IF EXISTS index_on_posts_id_and_path_and_thread;
+
+CREATE INDEX index_on_posts_id_and_path_and_thread
+  ON posts (path, "pID", thread);
+
+
 
 CREATE TABLE "threads" (
   "tID"     SERIAL NOT NULL,
@@ -95,13 +101,17 @@ CREATE TABLE "threads" (
 OIDS = FALSE
 );
 
-DROP INDEX IF EXISTS threads_slug_key;
+DROP INDEX IF EXISTS index_on_threads_slug;
 
-CREATE UNIQUE INDEX threads_slug_key ON threads (slug) WHERE slug != '';
+CREATE UNIQUE INDEX index_on_threads_slug ON threads (slug) WHERE slug != '';
 
-DROP INDEX IF EXISTS threads_forum_key;
+DROP INDEX IF EXISTS index_on_threads_forum;
 
-CREATE INDEX threads_forum_key ON threads (forum);
+CREATE INDEX index_on_threads_forum ON threads (forum);
+
+DROP INDEX IF EXISTS index_on_threads_created;
+
+CREATE INDEX index_on_threads_created ON threads (created);
 
 
 CREATE TABLE "votes" (
