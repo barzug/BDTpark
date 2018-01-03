@@ -49,10 +49,10 @@ DROP INDEX IF EXISTS index_on_users_nickname;
 CREATE UNIQUE INDEX index_on_users_nickname
   ON users (nickname);
 
-DROP INDEX IF EXISTS index_on_users_nickname_and_email;
+-- DROP INDEX IF EXISTS index_on_users_nickname_and_email;
 
-CREATE UNIQUE INDEX index_on_users_nickname_and_email
-  ON users (nickname, email);
+-- CREATE UNIQUE INDEX index_on_users_nickname_and_email
+--   ON users (nickname, email);
 
 
 CREATE TABLE "posts" (
