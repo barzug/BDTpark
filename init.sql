@@ -80,10 +80,10 @@ DROP INDEX IF EXISTS index_on_posts_path;
 CREATE INDEX index_on_posts_path
   ON posts (path);
 
-DROP INDEX IF EXISTS index_on_posts_id_and_path_and_thread;
+-- DROP INDEX IF EXISTS index_on_posts_id_and_path_and_thread;
 
-CREATE INDEX index_on_posts_id_and_path_and_thread
-  ON posts (path, "pID", thread);
+-- CREATE INDEX index_on_posts_id_and_path_and_thread
+--   ON posts (path, "pID", thread);
 
 
 
