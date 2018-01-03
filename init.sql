@@ -49,11 +49,6 @@ DROP INDEX IF EXISTS index_on_users_nickname;
 CREATE UNIQUE INDEX index_on_users_nickname
   ON users (nickname);
 
-DROP INDEX IF EXISTS index_on_users_nickname_and_email;
-
-CREATE UNIQUE INDEX index_on_users_nickname_and_email
-  ON users (nickname, email);
-
 
 CREATE TABLE "posts" (
   "pID"      SERIAL  NOT NULL,
@@ -88,12 +83,7 @@ CREATE INDEX index_on_posts_path
 DROP INDEX IF EXISTS index_on_posts_id_and_path_and_thread;
 
 CREATE INDEX index_on_posts_id_and_path_and_thread
-  ON posts ("pID", thread, path);
-
-DROP INDEX IF EXISTS index_on_posts_id_and_path;
-
-CREATE INDEX index_on_posts_id_and_path
-  ON posts ("pID", path);
+  ON posts (path, "pID", thread);
 
 
 
