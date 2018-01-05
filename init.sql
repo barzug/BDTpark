@@ -11,15 +11,12 @@ DROP TABLE IF EXISTS "votes";
 DROP TABLE IF EXISTS "members";
 
 CREATE TABLE "forums" (
-  "fID"     SERIAL NOT NULL,
-  "posts"   INT8   NOT NULL DEFAULT '0',
-  "slug"    CITEXT NOT NULL,
-  "threads" INT4   NOT NULL DEFAULT '0',
-  "title"   TEXT   NOT NULL,
-  "author"  TEXT   NOT NULL,
-  CONSTRAINT forums_pk PRIMARY KEY ("fID")
-) WITH (
-OIDS = FALSE
+  "fID"     SERIAL PRIMARY KEY,
+  "posts"   INT8 DEFAULT '0',
+  "slug"    CITEXT,
+  "threads" INT4 DEFAULT '0',
+  "title"   TEXT,
+  "author"  TEXT
 );
 
 DROP INDEX IF EXISTS index_on_forums_slug;
@@ -29,14 +26,11 @@ CREATE UNIQUE INDEX  index_on_forums_slug
 
 
 CREATE TABLE "users" (
-  "uID"      SERIAL NOT NULL,
-  "email"    CITEXT NOT NULL,
-  "nickname" CITEXT NOT NULL,
+  "uID"      SERIAL PRIMARY KEY,
+  "email"    CITEXT,
+  "nickname" CITEXT,
   "fullname" TEXT,
-  "about"    TEXT,
-  CONSTRAINT users_pk PRIMARY KEY ("uID")
-) WITH (
-OIDS = FALSE
+  "about"    TEXT
 );
 
 DROP INDEX IF EXISTS index_on_users_email;
@@ -56,51 +50,48 @@ CREATE UNIQUE INDEX index_on_users_nickname_and_email
 
 
 CREATE TABLE "posts" (
-  "pID"      SERIAL  NOT NULL,
-  "author"   TEXT    NOT NULL,
+  "pID"      SERIAL PRIMARY KEY,
+  "author"   TEXT,
   "created"  TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  "forum"    TEXT    NOT NULL,
-  "isEdited" BOOLEAN NOT NULL         DEFAULT 'false',
+  "forum"    TEXT,
+  "isEdited" BOOLEAN DEFAULT 'false',
   "message"  TEXT,
-  "parent"   INT8                     DEFAULT '0',
-  "thread"   BIGINT  NOT NULL,
-  "path"     INT8 [],
-  CONSTRAINT posts_pk PRIMARY KEY ("pID")
-) WITH (
-OIDS = FALSE
+  "parent"   INT8 DEFAULT '0',
+  "thread"   BIGINT,
+  "path"     INT8 []
 );
 
--- DROP INDEX IF EXISTS index_on_posts_thread;
+DROP INDEX IF EXISTS index_on_posts_thread;
 
--- CREATE INDEX index_on_posts_thread
---   ON posts (thread);
+CREATE INDEX index_on_posts_thread
+  ON posts (thread);
 
--- DROP INDEX IF EXISTS index_on_posts_parent;
+DROP INDEX IF EXISTS index_on_posts_parent;
 
--- CREATE INDEX index_on_posts_parent
---   ON posts (parent);
+CREATE INDEX index_on_posts_parent
+  ON posts (parent);
 
--- DROP INDEX IF EXISTS index_on_posts_path;
+DROP INDEX IF EXISTS index_on_posts_path;
 
--- CREATE INDEX index_on_posts_path
---   ON posts (path);
+CREATE INDEX index_on_posts_path
+  ON posts (path);
 
 -- 
 
-DROP INDEX IF EXISTS index_on_posts_id_and_thread;
+-- DROP INDEX IF EXISTS index_on_posts_id_and_thread;
 
-CREATE INDEX index_on_posts_id_and_thread
-  ON posts ("pID", thread);
+-- CREATE INDEX index_on_posts_id_and_thread
+--   ON posts ("pID", thread);
 
-DROP INDEX IF EXISTS index_on_posts_path_and_thread;
+-- DROP INDEX IF EXISTS index_on_posts_path_and_thread;
 
-CREATE INDEX index_on_posts_path_and_thread
-  ON posts (thread, path);
+-- CREATE INDEX index_on_posts_path_and_thread
+--   ON posts (thread, path);
 
-DROP INDEX IF EXISTS index_on_posts_parent_and_path_and_thread;
+-- DROP INDEX IF EXISTS index_on_posts_id_and_path_and_thread;
 
-CREATE INDEX index_on_posts_parent_and_path_and_thread
-  ON posts (parent, thread, path);
+-- CREATE INDEX index_on_posts_id_and_path_and_thread
+--   ON posts ("pID", thread, path);
 
 -- DROP INDEX IF EXISTS index_on_posts_id_and_path;
 
@@ -109,17 +100,14 @@ CREATE INDEX index_on_posts_parent_and_path_and_thread
 
 
 CREATE TABLE "threads" (
-  "tID"     SERIAL NOT NULL,
-  "author"  TEXT   NOT NULL,
+  "tID"     SERIAL PRIMARY KEY,
+  "author"  TEXT,
   "created" TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  "forum"   CITEXT NOT NULL,
-  "message" TEXT   NOT NULL,
+  "forum"   CITEXT,
+  "message" TEXT,
   "slug"    CITEXT,
-  "title"   TEXT   NOT NULL,
-  "votes"   INT4   NOT NULL          DEFAULT '0',
-  CONSTRAINT threads_pk PRIMARY KEY ("tID")
-) WITH (
-OIDS = FALSE
+  "title"   TEXT,
+  "votes"   INT4 DEFAULT '0'
 );
 
 DROP INDEX IF EXISTS index_on_threads_slug;
@@ -139,8 +127,6 @@ CREATE TABLE "votes" (
   "voice"  INT2,
   "user"   CITEXT,
   "thread" BIGINT
-) WITH (
-OIDS = FALSE
 );
 
 DROP INDEX IF EXISTS index_on_votes_user_and_thread;
@@ -151,8 +137,6 @@ CREATE UNIQUE INDEX index_on_votes_user_and_thread ON votes (thread, "user");
 CREATE TABLE IF NOT EXISTS "members" (
   forum  CITEXT,
   author CITEXT
-) WITH (
-  OIDS = FALSE
 );
 
 DROP INDEX IF EXISTS index_on_members_forum_and_author;
