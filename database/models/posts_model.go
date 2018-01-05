@@ -1,10 +1,11 @@
 package models
 
 import (
-	"time"
-	"github.com/jackc/pgx"
-	"../../utils"
 	"sync"
+	"time"
+
+	"../../utils"
+	"github.com/jackc/pgx"
 )
 
 type Posts struct {
@@ -34,7 +35,7 @@ func CreatePostsBySlice(pool *pgx.ConnPool, posts []Posts, threadId int64, creat
 		waitData.Add(1)
 
 		var valFromSeq int64
-		err := pool.QueryRow(`SELECT nextval('"posts_pID_seq"')`).Scan(&valFromSeq);
+		err := pool.QueryRow(`SELECT nextval('"posts_pID_seq"')`).Scan(&valFromSeq)
 
 		go func(waitData *sync.WaitGroup, i int, pIDfFromSeq int64) {
 			posts[i].PID = pIDfFromSeq
@@ -43,9 +44,9 @@ func CreatePostsBySlice(pool *pgx.ConnPool, posts []Posts, threadId int64, creat
 
 			if posts[i].Parent != 0 {
 				var parentPath []int64
-				err := pool.QueryRow(`SELECT path FROM posts WHERE "pID"=$1 AND thread=$2`, posts[i].Parent, threadId).Scan(&parentPath);
+				err := pool.QueryRow(`SELECT path FROM posts WHERE "pID"=$1 AND thread=$2`, posts[i].Parent, threadId).Scan(&parentPath)
 				if err != nil {
-					conflictErr = err;
+					conflictErr = err
 				}
 				path = append(path, parentPath...)
 			}
@@ -63,9 +64,9 @@ func CreatePostsBySlice(pool *pgx.ConnPool, posts []Posts, threadId int64, creat
 			muteForInsert.Lock()
 			err = tx.QueryRow(`INSERT INTO posts ("pID", message, thread, parent, author, created, forum, path)
 										VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING "pID", created`,
-				&posts[i].PID, &posts[i].Message, &posts[i].Thread, &posts[i].Parent, &posts[i].Author, created.Format(time.RFC3339), &posts[i].Forum, &path).Scan(&posts[i].PID, &posts[i].Created);
+				&posts[i].PID, &posts[i].Message, &posts[i].Thread, &posts[i].Parent, &posts[i].Author, created.Format(time.RFC3339), &posts[i].Forum, &path).Scan(&posts[i].PID, &posts[i].Created)
 			if err != nil {
-				conflictErr = err;
+				conflictErr = err
 			}
 			muteForInsert.Unlock()
 
@@ -94,7 +95,6 @@ func CreatePostsBySlice(pool *pgx.ConnPool, posts []Posts, threadId int64, creat
 	return nil
 }
 
-
 func (post *Posts) GetPostById(pool *pgx.ConnPool) (Posts, error) {
 	resultPost := Posts{PID: post.PID}
 	err := pool.QueryRow(`SELECT author, created, forum, message, thread, "isEdited", parent FROM posts WHERE "pID" = $1`,
@@ -107,10 +107,9 @@ func (post *Posts) GetPostById(pool *pgx.ConnPool) (Posts, error) {
 }
 
 func (post *Posts) UpdatePost(pool *pgx.ConnPool) error {
-	var id int64
 	err := pool.QueryRow(`UPDATE posts SET message = $1, "isEdited" = true`+
-		` WHERE "pID" = $2 RETURNING "pID", author, created, forum, "isEdited", thread;`,
-		post.Message, post.PID).Scan(&id, &post.Author, &post.Created, &post.Forum, &post.IsEdited, &post.Thread)
+		` WHERE "pID" = $2 RETURNING author, created, forum, "isEdited", thread;`,
+		post.Message, post.PID).Scan(&post.Author, &post.Created, &post.Forum, &post.IsEdited, &post.Thread)
 	if err != nil {
 		if pgerr, ok := err.(pgx.PgError); ok {
 			if pgerr.ConstraintName == "post_pk" {

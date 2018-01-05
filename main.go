@@ -10,9 +10,6 @@ import (
 	"./router"
 
 	"github.com/valyala/fasthttp"
-	//_ "net/http/pprof"
-	//
-	//"net/http"
 )
 
 const port = ":5000"
@@ -45,7 +42,7 @@ func main() {
 
 	log.Printf("Server started")
 
-	err := daemon.Init("localhost", "postgres", "docker", "docker", 50)
+	err := daemon.Init("localhost", "postgres", "docker", "docker", 20)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -59,6 +56,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	//go http.ListenAndServe("0.0.0.0:1111", nil)
 	log.Fatal(fasthttp.ListenAndServe(port, r.Router.HandleRequest))
 }

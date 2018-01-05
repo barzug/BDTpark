@@ -23,21 +23,9 @@ type Threads struct {
 func (thread *Threads) CreateThread(pool *pgx.ConnPool) error {
 	var id int64
 
-	tx, err := pool.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
+	pool.Exec("UPDATE forums SET threads=threads+1 WHERE slug=$1", thread.Forum)
 
-	//waitData := &sync.WaitGroup{}
-	//waitData.Add(1)
-
-	//go func(waitData *sync.WaitGroup) {
-	//	defer waitData.Done()
-	tx.Exec("UPDATE forums SET threads=threads+1 WHERE slug=$1", thread.Forum)
-	//}(waitData)
-
-	err = tx.QueryRow(`INSERT INTO threads (author, created, message, slug, title, forum)`+
+	err := pool.QueryRow(`INSERT INTO threads (author, created, message, slug, title, forum)`+
 		`VALUES ($1, $2, $3, $4, $5, $6) RETURNING "tID", created;`,
 		thread.Author, thread.Created, thread.Message, thread.Slug, thread.Title, thread.Forum).Scan(&id, &thread.Created)
 	if err != nil {
@@ -48,13 +36,6 @@ func (thread *Threads) CreateThread(pool *pgx.ConnPool) error {
 				return err
 			}
 		}
-		return err
-	}
-
-	//waitData.Wait() //почему здесь нк работает?
-
-	err = tx.Commit()
-	if err != nil {
 		return err
 	}
 
@@ -175,7 +156,7 @@ func (thread *Threads) GetPostsWithTreeSort(pool *pgx.ConnPool, limit, since, de
 //WHERE thread = 119 AND parent = 0 AND path > (SELECT path FROM posts WHERE "pID" = 2038) ORDER BY path ASC  LIMIT 3) ORDER BY path ASC
 func (thread *Threads) GetPostsWithParentTreeSort(pool *pgx.ConnPool, limit, since, desc string) ([]Posts, error) {
 	queryRow := bytes.Buffer{}
-	queryRow.WriteString(`SELECT "pID", author, created, forum, message, thread, parent FROM posts WHERE thread = $1 AND path[1] in (SELECT "pID" FROM posts
+	queryRow.WriteString(`SELECT "pID", author, created, forum, message, thread, parent FROM posts WHERE thread = $1 AND path[1] in (SELECT path[1] FROM posts
 	WHERE thread = $1 AND parent = 0 `)
 
 	var params []interface{}
