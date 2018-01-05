@@ -88,17 +88,21 @@ func (thread *Threads) GetPostsWithFlatSort(pool *pgx.ConnPool, limit, since, de
 		if desc == "true" {
 			queryRow.WriteString(` AND "pID" < $`)
 			queryRow.WriteString(strconv.Itoa(len(params) + 1))
+			queryRow.WriteString(` ORDER BY "pID" DESC`)
 		} else {
 			queryRow.WriteString(` AND "pID" > $`)
 			queryRow.WriteString(strconv.Itoa(len(params) + 1))
+			queryRow.WriteString(` ORDER BY "pID" ASC`)
 		}
 		params = append(params, since)
-	}
-	if desc == "true" {
-		queryRow.WriteString(` ORDER BY "pID" DESC`)
 	} else {
-		queryRow.WriteString(` ORDER BY "pID" ASC`)
+		if desc == "true" {
+			queryRow.WriteString(` ORDER BY "pID" DESC`)
+		} else {
+			queryRow.WriteString(` ORDER BY "pID" ASC`)
+		}
 	}
+
 	if limit != "" {
 		queryRow.WriteString(` LIMIT $`)
 		queryRow.WriteString(strconv.Itoa(len(params) + 1))
@@ -131,18 +135,19 @@ func (thread *Threads) GetPostsWithTreeSort(pool *pgx.ConnPool, limit, since, de
 		if desc == "true" {
 			queryRow.WriteString(` AND path < (SELECT path FROM posts WHERE "pID" = $`)
 			queryRow.WriteString(strconv.Itoa(len(params) + 1))
-			queryRow.WriteString(`)`)
+			queryRow.WriteString(`) ORDER BY path DES`)
 		} else {
 			queryRow.WriteString(` AND path > (SELECT path FROM posts WHERE "pID" = $`)
 			queryRow.WriteString(strconv.Itoa(len(params) + 1))
-			queryRow.WriteString(`)`)
+			queryRow.WriteString(`) ORDER BY path ASC`)
 		}
 		params = append(params, since)
-	}
-	if desc == "true" {
-		queryRow.WriteString(` ORDER BY path DESC`)
 	} else {
-		queryRow.WriteString(` ORDER BY path ASC`)
+		if desc == "true" {
+			queryRow.WriteString(` ORDER BY path DESC`)
+		} else {
+			queryRow.WriteString(` ORDER BY path ASC`)
+		}
 	}
 	if limit != "" {
 		queryRow.WriteString(` LIMIT $`)
@@ -180,18 +185,19 @@ func (thread *Threads) GetPostsWithParentTreeSort(pool *pgx.ConnPool, limit, sin
 		if desc == "true" {
 			queryRow.WriteString(` AND path < (SELECT path FROM posts WHERE "pID" = $`)
 			queryRow.WriteString(strconv.Itoa(len(params) + 1))
-			queryRow.WriteString(`)`)
+			queryRow.WriteString(`) ORDER BY path DESC`)
 		} else {
 			queryRow.WriteString(` AND path > (SELECT path FROM posts WHERE "pID" = $`)
 			queryRow.WriteString(strconv.Itoa(len(params) + 1))
-			queryRow.WriteString(`)`)
+			queryRow.WriteString(`) ORDER BY path ASC`)
 		}
 		params = append(params, since)
-	}
-	if desc == "true" {
-		queryRow.WriteString(` ORDER BY path DESC`)
 	} else {
-		queryRow.WriteString(` ORDER BY path ASC`)
+		if desc == "true" {
+			queryRow.WriteString(` ORDER BY path DESC`)
+		} else {
+			queryRow.WriteString(` ORDER BY path ASC`)
+		}
 	}
 	if limit != "" {
 		queryRow.WriteString(` LIMIT $`)

@@ -1,22 +1,25 @@
 package handlers
 
 import (
-	"../database/models"
+	"sync"
+
 	"../daemon"
+	"../database/models"
 	"../utils"
 
 	"encoding/json"
-	"github.com/valyala/fasthttp"
-	"github.com/qiangxue/fasthttp-routing"
-	"time"
 	"strconv"
 	"strings"
+	"time"
+
+	"github.com/qiangxue/fasthttp-routing"
+	"github.com/valyala/fasthttp"
 )
 
 func CreatePosts(c *routing.Context) error {
 	slugOrId := c.Param("slug_or_id")
 	posts := []models.Posts{}
-	err := json.Unmarshal(c.PostBody(), &posts);
+	err := json.Unmarshal(c.PostBody(), &posts)
 	if err != nil {
 		return err
 	}
@@ -27,10 +30,10 @@ func CreatePosts(c *routing.Context) error {
 
 	if id, parseErr := strconv.ParseInt(slugOrId, 10, 64); parseErr == nil {
 		thread.TID = id
-		err = thread.GetThreadById(daemon.DB.Pool);
+		err = thread.GetThreadById(daemon.DB.Pool)
 	} else {
 		thread.Slug = slugOrId
-		err = thread.GetThreadBySlug(daemon.DB.Pool);
+		err = thread.GetThreadBySlug(daemon.DB.Pool)
 	}
 	if err != nil {
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
@@ -77,40 +80,48 @@ func GetPost(c *routing.Context) error {
 
 	response.Post = &resultPost
 
+	waitData := &sync.WaitGroup{}
+
 	related := string(c.QueryArgs().Peek("related"))
 	if related != "" {
 		splitRelated := strings.Split(related, ",")
 		for _, entity := range splitRelated {
-			var err error
-			switch entity {
-			case "forum":
-				forum := new(models.Forums)
-				forum.Slug = resultPost.Forum
+			waitData.Add(1)
+			
+			go func(waitData *sync.WaitGroup, _entity string) {
+				defer waitData.Done()
 
-				var resultForum models.Forums
-				resultForum, err = forum.GetForumBySlug(daemon.DB.Pool)
-				response.Forum = &resultForum
-			case "user":
-				user := new(models.Users)
-				user.Nickname = resultPost.Author
+				var err error
+				switch _entity {
+				case "forum":
+					forum := new(models.Forums)
+					forum.Slug = resultPost.Forum
 
-				var resultUser models.Users
-				resultUser, err = user.GetUserByLogin(daemon.DB.Pool)
-				response.Author = &resultUser
-			case "thread":
-				thread := new(models.Threads)
-				thread.TID = resultPost.Thread
+					var resultForum models.Forums
+					resultForum, err = forum.GetForumBySlug(daemon.DB.Pool)
+					response.Forum = &resultForum
+				case "user":
+					user := new(models.Users)
+					user.Nickname = resultPost.Author
 
-				err = thread.GetThreadById(daemon.DB.Pool)
-				response.Thread = thread
+					var resultUser models.Users
+					resultUser, err = user.GetUserByLogin(daemon.DB.Pool)
+					response.Author = &resultUser
+				case "thread":
+					thread := new(models.Threads)
+					thread.TID = resultPost.Thread
 
-			}
-			if err != nil {
-				daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
-				return nil
-			}
+					err = thread.GetThreadById(daemon.DB.Pool)
+					response.Thread = thread
+
+				}
+				if err != nil {
+					daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
+				}
+			}(waitData, entity)
 		}
 	}
+	waitData.Wait()
 	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, response)
 	return nil
 }
