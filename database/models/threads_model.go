@@ -135,7 +135,7 @@ func (thread *Threads) GetPostsWithTreeSort(pool *pgx.ConnPool, limit, since, de
 		if desc == "true" {
 			queryRow.WriteString(` AND path < (SELECT path FROM posts WHERE "pID" = $`)
 			queryRow.WriteString(strconv.Itoa(len(params) + 1))
-			queryRow.WriteString(`) ORDER BY path DES`)
+			queryRow.WriteString(`) ORDER BY path DESC`)
 		} else {
 			queryRow.WriteString(` AND path > (SELECT path FROM posts WHERE "pID" = $`)
 			queryRow.WriteString(strconv.Itoa(len(params) + 1))
