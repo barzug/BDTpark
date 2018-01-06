@@ -88,10 +88,10 @@ CREATE INDEX index_on_posts_path
 -- CREATE INDEX index_on_posts_path_and_thread
 --   ON posts (thread, path);
 
-DROP INDEX IF EXISTS index_on_posts_path_and_thread_and_parent;
+-- DROP INDEX IF EXISTS index_on_posts_path_and_thread_and_parent;
 
-CREATE INDEX index_on_posts_path_and_thread_and_parent
-  ON posts (path, thread, parent);
+-- CREATE INDEX index_on_posts_path_and_thread_and_parent
+--   ON posts (path, thread, parent);
 
 -- DROP INDEX IF EXISTS index_on_posts_id_and_path;
 
