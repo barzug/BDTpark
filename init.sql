@@ -135,9 +135,9 @@ DROP INDEX IF EXISTS index_on_votes_user_and_thread;
 
 CREATE UNIQUE INDEX index_on_votes_user_and_thread ON votes (thread, "user");
 
-DROP INDEX IF EXISTS index_on_votes_user_and_thread_and_voice;
+-- DROP INDEX IF EXISTS index_on_votes_user_and_thread_and_voice;
 
-CREATE INDEX index_on_votes_user_and_thread_and_voice ON votes (thread, "user", voice);
+-- CREATE INDEX index_on_votes_user_and_thread_and_voice ON votes (thread, "user", voice);
 
 
 CREATE TABLE IF NOT EXISTS "members" (
