@@ -81,22 +81,24 @@ CREATE INDEX index_on_posts_path
 DROP INDEX IF EXISTS index_on_posts_id_and_thread;
 
 CREATE INDEX index_on_posts_id_and_thread
-  ON posts ("pID", thread);
+  ON posts ("pID", thread); -- +
 
-DROP INDEX IF EXISTS index_on_posts_path_and_thread;
+-- DROP INDEX IF EXISTS index_on_posts_path_and_thread;
 
-CREATE INDEX index_on_posts_path_and_thread
-  ON posts (thread, path);
+-- CREATE INDEX index_on_posts_parent_and_thread
+--   ON posts (thread, parent);
+
+-- или
 
 -- DROP INDEX IF EXISTS index_on_posts_path_and_thread_and_parent;
 
 -- CREATE INDEX index_on_posts_path_and_thread_and_parent
 --   ON posts (path, thread, parent);
 
-DROP INDEX IF EXISTS index_on_posts_id_and_path;
+-- DROP INDEX IF EXISTS index_on_posts_id_and_path;
 
-CREATE INDEX index_on_posts_id_and_path
-  ON posts ("pID", path);
+-- CREATE INDEX index_on_posts_id_and_path
+--   ON posts ("pID", path);
 
 
 CREATE TABLE "threads" (
@@ -133,6 +135,10 @@ DROP INDEX IF EXISTS index_on_votes_user_and_thread;
 
 CREATE UNIQUE INDEX index_on_votes_user_and_thread ON votes (thread, "user");
 
+DROP INDEX IF EXISTS index_on_votes_user_and_thread_and_voice;
+
+CREATE INDEX index_on_votes_user_and_thread_and_voice ON votes (thread, "user", voice);
+
 
 CREATE TABLE IF NOT EXISTS "members" (
   forum  CITEXT,
@@ -142,3 +148,7 @@ CREATE TABLE IF NOT EXISTS "members" (
 DROP INDEX IF EXISTS index_on_members_forum_and_author;
 
 CREATE UNIQUE INDEX index_on_members_forum_and_author ON members (forum, author);
+
+DROP INDEX IF EXISTS index_on_members_forum;
+
+CREATE INDEX index_on_members_forum ON members (forum);
