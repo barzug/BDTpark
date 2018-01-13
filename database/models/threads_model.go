@@ -29,13 +29,13 @@ func (thread *Threads) CreateThread(pool *pgx.ConnPool) error {
 		`VALUES ($1, $2, $3, $4, $5, $6) RETURNING "tID", created;`,
 		thread.Author, thread.Created, thread.Message, thread.Slug, thread.Title, thread.Forum).Scan(&id, &thread.Created)
 	if err != nil {
-		if pgerr, ok := err.(pgx.PgError); ok {
-			if pgerr.ConstraintName == "index_on_threads_slug" {
+		// if pgerr, ok := err.(pgx.PgError); ok {
+			// if pgerr.ConstraintName == "index_on_threads_slug" {
 				return utils.UniqueError
-			} else {
-				return err
-			}
-		}
+			// } else {
+			// 	return err
+			// }
+		// }
 		return err
 	}
 

@@ -40,7 +40,7 @@ func CreateThread(c *routing.Context) error {
 	go func(waitData *sync.WaitGroup) {
 		defer waitData.Done()
 		forum := models.Forums{Slug: slug}
-		forum, errForum = forum.GetForumBySlug(daemon.DB.Pool)
+		errForum = forum.GetForumBySlug(daemon.DB.Pool)
 		forumSlug = forum.Slug
 	}(waitData)
 
@@ -82,12 +82,12 @@ func GetThread(c *routing.Context) error {
 
 	forum := new(models.Forums)
 	forum.Slug = slug
-	_, err := forum.GetForumBySlug(daemon.DB.Pool);
+	err := forum.GetForumBySlug(daemon.DB.Pool);
 	if err != nil {
-
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
 		return nil
 	}
+	
 	threads, err := forum.GetAllThreads(daemon.DB.Pool, limit, since, desc);
 	if err != nil {
 
@@ -186,7 +186,6 @@ func UpdateThread(c *routing.Context) error {
 
 	if utils.CheckEmpty(thread) {
 		utils.AdditionObject(thread, &prevThread)
-
 	}
 
 	if err := thread.UpdateThread(daemon.DB.Pool); err != nil {

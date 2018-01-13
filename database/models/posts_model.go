@@ -111,13 +111,13 @@ func (post *Posts) UpdatePost(pool *pgx.ConnPool) error {
 		` WHERE "pID" = $2 RETURNING author, created, forum, "isEdited", thread;`,
 		post.Message, post.PID).Scan(&post.Author, &post.Created, &post.Forum, &post.IsEdited, &post.Thread)
 	if err != nil {
-		if pgerr, ok := err.(pgx.PgError); ok {
-			if pgerr.ConstraintName == "post_pk" {
+		// if pgerr, ok := err.(pgx.PgError); ok {
+		// 	if pgerr.ConstraintName == "post_pk" {
 				return utils.UniqueError
-			} else {
-				return err
-			}
-		}
+		// 	} else {
+		// 		return err
+		// 	}
+		// }
 		return err
 	}
 	return nil

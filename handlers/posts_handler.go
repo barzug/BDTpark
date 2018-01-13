@@ -94,12 +94,11 @@ func GetPost(c *routing.Context) error {
 				var err error
 				switch _entity {
 				case "forum":
-					forum := new(models.Forums)
+					forum := models.Forums{}
 					forum.Slug = resultPost.Forum
 
-					var resultForum models.Forums
-					resultForum, err = forum.GetForumBySlug(daemon.DB.Pool)
-					response.Forum = &resultForum
+					err = forum.GetForumBySlug(daemon.DB.Pool)
+					response.Forum = &forum
 				case "user":
 					user := new(models.Users)
 					user.Nickname = resultPost.Author

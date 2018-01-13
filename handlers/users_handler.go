@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"sync"
+
 	"../daemon"
 	"../database/models"
 	"../utils"
@@ -87,26 +89,43 @@ func UpdateUser(c *routing.Context) error {
 	return nil
 }
 
- func GetForumUsers(c *routing.Context) error {
+func GetForumUsers(c *routing.Context) error {
  	slug := c.Param("slug")
  	forum := new(models.Forums)
- 	forum.Slug = slug
+	forum.Slug = slug
+	 
+	waitGetForum := &sync.WaitGroup{}
 
- 	_, err := forum.GetForumBySlug(daemon.DB.Pool); //мб можно и бех этого
- 	if err != nil {
- 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
- 		return nil
- 	}
+	var errInGetForum error
+
+	waitGetForum.Add(1)
+	go func(waitGetForum *sync.WaitGroup, err *error) {
+		defer waitGetForum.Done()
+ 		*err = forum.GetForumBySlug(daemon.DB.Pool);
+	 }(waitGetForum, &errInGetForum)
+
 
  	limit := string(c.QueryArgs().Peek("limit"))
  	since := string(c.QueryArgs().Peek("since"))
- 	desc := string(c.QueryArgs().Peek("desc"))
+	desc := string(c.QueryArgs().Peek("desc"))
+	 
+	if errInGetForum != nil {
+		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
+		return nil
+	}
 
  	users, err := forum.GetMembers(daemon.DB.Pool, limit, since, desc)
  	if err != nil {
  		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
  		return nil
- 	}
+	 }
+	 
+
+	waitGetForum.Wait()
+	if errInGetForum != nil {
+		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
+		return nil
+	}
 
  	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, users)
  	return nil

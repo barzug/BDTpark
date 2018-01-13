@@ -25,27 +25,21 @@ func (forum *Forums) CreateForum(pool *pgx.ConnPool) error {
 		`VALUES ($1, $2, $3) RETURNING "fID";`,
 		forum.Slug, forum.Title, forum.Author).Scan(&id)
 	if err != nil {
-		if pgerr, ok := err.(pgx.PgError); ok {
-			if pgerr.ConstraintName == "index_on_forums_slug" {
+		// if pgerr, ok := err.(pgx.PgError); ok {
+		// 	if pgerr.ConstraintName == "index_on_forums_slug" {
 				return utils.UniqueError
-			} else {
-				return err
-			}
-		}
-		return err
+		// 	} else {
+		// 		return err
+		// 	}
+		// }
+		// return err
 	}
 	return nil
 }
 
-func (forum *Forums) GetForumBySlug(pool *pgx.ConnPool) (Forums, error) {
-	resultForum := Forums{}
-	err := pool.QueryRow(`SELECT slug, title, author, posts, threads  FROM forums WHERE slug = $1`,
-		forum.Slug).Scan(&resultForum.Slug, &resultForum.Title, &resultForum.Author, &resultForum.Posts, &resultForum.Threads)
-
-	if err != nil {
-		return resultForum, err
-	}
-	return resultForum, nil
+func (forum *Forums) GetForumBySlug(pool *pgx.ConnPool) error {
+	return pool.QueryRow(`SELECT slug, title, author, posts, threads  FROM forums WHERE slug = $1`,
+		forum.Slug).Scan(&forum.Slug, &forum.Title, &forum.Author, &forum.Posts, &forum.Threads)
 }
 
 func (forum *Forums) GetAllThreads(pool *pgx.ConnPool, limit, since, desc string) ([]Threads, error) {

@@ -20,13 +20,13 @@ func (user *Users) CreateUser(pool *pgx.ConnPool) error {
 		 `VALUES ($1, $2, $3, $4) RETURNING "uID";`,
 		user.Nickname, user.Email, user.Fullname, user.About).Scan(&id)
 	if err != nil {
-		if pgerr, ok := err.(pgx.PgError); ok {
-			if pgerr.ConstraintName == "index_on_users_nickname" || pgerr.ConstraintName == "index_on_users_email"  {
+		// if pgerr, ok := err.(pgx.PgError); ok {
+		// 	if pgerr.ConstraintName == "index_on_users_nickname" || pgerr.ConstraintName == "index_on_users_email"  {
 				return utils.UniqueError
-			} else {
-				return err
-			}
-		}
+			// } else {
+			// 	return err
+			// }
+		// }
 		return err
 	}
 	return nil
@@ -79,14 +79,14 @@ func (user *Users) UpdateUser(pool *pgx.ConnPool) error {
 		`WHERE nickname = $4 RETURNING "uID";`,
 		user.Email, user.Fullname, user.About, user.Nickname).Scan(&id)
 	if err != nil {
-		if pgerr, ok := err.(pgx.PgError); ok {
-			if pgerr.ConstraintName == "index_on_users_email"  {
+		// if pgerr, ok := err.(pgx.PgError); ok {
+			// if pgerr.ConstraintName == "index_on_users_email"  {
 				return utils.UniqueError
-			} else {
-				return err
-			}
-		}
-		return err
+			// } else {
+			// 	return err
+			// }
+		// }
+		// return err
 	}
 	return nil
 }

@@ -29,14 +29,14 @@ func CreateForum(c *routing.Context) error {
 
 	if err := forum.CreateForum(daemon.DB.Pool); err != nil {
 		if err == utils.UniqueError {
-			prevForum, err := forum.GetForumBySlug(daemon.DB.Pool)
+			err := forum.GetForumBySlug(daemon.DB.Pool)
 
 			if err != nil {
 				daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
 				return err
 			}
 
-			daemon.Render.JSON(c.RequestCtx, fasthttp.StatusConflict, prevForum)
+			daemon.Render.JSON(c.RequestCtx, fasthttp.StatusConflict, forum)
 			return nil
 		}
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusBadRequest, nil)
@@ -52,12 +52,12 @@ func GetForumDetails(c *routing.Context) error {
 	forum := new(models.Forums)
 	forum.Slug = slug
 
-	resultForum, err := forum.GetForumBySlug(daemon.DB.Pool);
+	err := forum.GetForumBySlug(daemon.DB.Pool);
 	if err != nil {
 		daemon.Render.JSON(c.RequestCtx, fasthttp.StatusNotFound, nil)
 		return nil
 	}
 
-	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, resultForum)
+	daemon.Render.JSON(c.RequestCtx, fasthttp.StatusOK, forum)
 	return nil
 }
